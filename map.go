@@ -2,8 +2,9 @@ package olayc
 
 import "reflect"
 
-// Copy map key-values from src to dst, dst can't override the src values.
-// There are some cases, for a specified key:
+// Copy map values from src to dst, keep the src value if key is conflicted.
+//
+// There are some cases(see map_test.go), for a specified key:
 // - If it doesn't exist in dst map, copy src map value to dst map.
 // For example, dst's `foo.name=foo0` will be copied to result.
 // src:
@@ -51,7 +52,7 @@ import "reflect"
 //   id: 123
 //   redis:
 //     host: redis.cluster
-//     port: 3096
+//     port: 6380
 // `
 // dst:
 // `
@@ -66,9 +67,9 @@ import "reflect"
 //   foo: foo0
 //   redis:
 //     host: redis.cluster
-//     port: 3096
+//     port: 6380
 // `
-func CopyMap(dst map[any]any, src map[any]any) {
+func copyMap(dst map[any]any, src map[any]any) {
 	copyMapDFS(dst, src)
 }
 
@@ -96,7 +97,7 @@ func copyMapDFS(dst map[any]any, src map[any]any) {
 			continue
 		}
 
-		// If dst and src are both map type, recursively copy.
+		// If dst and src are both map type, recursively copy with DFS.
 		nextDst, isDstMapType := dst[k].(map[any]any)
 		nextSrc, isSrcMapType := src[k].(map[any]any)
 		if !isDstMapType || !isSrcMapType {

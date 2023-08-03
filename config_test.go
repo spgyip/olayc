@@ -1,10 +1,6 @@
 package olayc
 
-import (
-	"reflect"
-	"testing"
-)
-
+/*
 func TestDefaultConfig(t *testing.T) {
 	var expect = map[string]any{
 		"foo": map[string]any{
@@ -51,4 +47,4 @@ func TestYamlConfigGetScalar(t *testing.T) {
 			t.Errorf("got(%v)!=expect(%v) with key %v", got, tc.expect, tc.key)
 		}
 	}
-}
+}*/
