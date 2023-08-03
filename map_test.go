@@ -5,6 +5,28 @@ import (
 	"testing"
 )
 
+func TestMergeMapAppendEmpty(t *testing.T) {
+	var m0 = map[any]any{}
+	var m1 = map[any]any{
+		"foo": map[any]any{
+			"id": 123,
+		},
+	}
+
+	var expect = map[any]any{
+		"foo": map[any]any{
+			"id": 123,
+		},
+	}
+
+	copyMap(m0, m1)
+	if !reflect.DeepEqual(m0, expect) {
+		t.Log("m0:", m0)
+		t.Log("expect:", expect)
+		t.Fatal("Merged result is not expected.")
+	}
+}
+
 func TestMergeMapAppendNew(t *testing.T) {
 	var m0 = map[any]any{
 		"foo": map[any]any{
