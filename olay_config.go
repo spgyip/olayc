@@ -17,6 +17,19 @@ const (
 	internalFlagNameJsonFile = "olayc.file.json"
 )
 
+// Print OlayConfig usage.
+func usage() {
+	fmt.Println("Usage of olayc:")
+	fmt.Println("  -olayc.help int")
+	fmt.Println("       Print this help message and call os.Exit(0).")
+	fmt.Println("  -olayc.silent bool")
+	fmt.Println("       Turn silent mode on/off. Default is false.")
+	fmt.Println("  -olayc.file.yaml string")
+	fmt.Println("       Load yaml file.")
+	fmt.Println("  -olayc.json.yaml string")
+	fmt.Println("       Load json file.")
+}
+
 // OlayConfig is composition of multiple configure sources, each source is overlayed from bottom to top.
 // The top layer is visible if there is key conflicted among layers.
 // The configure sources can be configure files, environments and commandline arguments.
@@ -89,17 +102,24 @@ func Load() {
 	flgs.parse(os.Args[1:])
 
 	var yamlFiles []string
+	var help = false
 	for _, kv := range flgs.kvs {
 		if kv.key == "olayc.silent" {
-			if strings.ToLower(kv.value) == "true" {
+			if kv.value == true {
 				defaultC.silent = true
 			} else {
 				defaultC.silent = false
 			}
+		} else if kv.key == "olayc.help" {
+			help = true
+		} else if kv.key == internalFlagNameYamlFile {
+			yamlFiles = append(yamlFiles, kv.value.(string))
 		}
-		if kv.key == internalFlagNameYamlFile {
-			yamlFiles = append(yamlFiles, kv.value)
-		}
+	}
+
+	if help {
+		usage()
+		os.Exit(0)
 	}
 
 	if !defaultC.silent {

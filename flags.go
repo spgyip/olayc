@@ -8,7 +8,7 @@ import (
 
 type kv struct {
 	key   string
-	value string
+	value any
 }
 
 type flags struct {
@@ -17,6 +17,11 @@ type flags struct {
 }
 
 // Parse arguments. Invalid arguments will be ignored.
+// -name=foo  // parsed as <name, foo>
+// --name=foo // parsed as <name, foo>
+// -name foo  // parsed as <name, foo>
+// --name foo // parsed as <name, foo>
+// -switch    // parsed as <switch, true>
 func (f *flags) parse(args []string) int {
 	f.args = args
 	end := false
@@ -33,7 +38,8 @@ func (f *flags) parseOne() (bool, error) {
 		return true, nil
 	}
 
-	key, value := f.args[0], ""
+	key := f.args[0]
+	var value any
 	f.args = f.args[1:]
 
 	if len(key) >= 2 && key[0:2] == "--" {
@@ -46,13 +52,19 @@ func (f *flags) parseOne() (bool, error) {
 
 	sps := strings.Split(key, "=")
 	if len(sps) == 1 {
-		if len(f.args) == 0 {
-			return false, errors.Errorf("No value specified for key: %v", key)
+		// Format of '-name foo'
+		if len(f.args) == 0 || f.args[0][0] == '-' {
+			// It's the last argument,
+			// or next argument is not a value with prefix "-",
+			// The value is parsed as true value of bool type.
+			value = true
+		} else if len(f.args) > 0 {
+			// Get value from the next argument.
+			value = f.args[0]
+			f.args = f.args[1:]
 		}
-
-		value = f.args[0]
-		f.args = f.args[1:]
 	} else {
+		// Format of '-name=foo'
 		key = sps[0]
 		value = sps[1]
 	}

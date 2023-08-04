@@ -5,13 +5,14 @@ import (
 )
 
 func TestFlags(t *testing.T) {
-	fl := newFlags()
+	fl := &flags{}
 	fl.parse([]string{
 		"--id=123",
 		"-name=foo1",
 		"-redis.host",
 		"redis.cluster",
 		"invalid",
+		"-switch",
 		"--redis.port",
 		"8306",
 	})
@@ -22,6 +23,7 @@ func TestFlags(t *testing.T) {
 		{"id", "123"},
 		{"name", "foo1"},
 		{"redis.host", "redis.cluster"},
+		{"switch", true},
 		{"redis.port", "8306"},
 	}
 
