@@ -124,7 +124,7 @@ func Load() {
 
 	if !defaultC.silent {
 		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
-		fmt.Println("[OlayConfig] Silent mode can be turned on with '--olayc.silent=true'.")
+		fmt.Println("[OlayConfig] Silent mode can be turned on with '-olayc.silent'.")
 	}
 
 	for _, file := range yamlFiles {
