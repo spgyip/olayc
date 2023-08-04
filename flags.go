@@ -16,21 +16,17 @@ type flags struct {
 	kvs  []kv
 }
 
-// newFlags allocates and returns a flags.
-func newFlags() *flags {
-	return &flags{}
-}
-
-// Parse arguments.
-func (f *flags) parse(args []string) {
+// Parse arguments. Invalid arguments will be ignored.
+func (f *flags) parse(args []string) int {
 	f.args = args
 	end := false
 	for !end {
 		end, _ = f.parseOne()
 	}
+	return len(f.kvs)
 }
 
-// Return true if end of last arguments.
+// Return true if encounter end of the last argument.
 // Return error if argument invalid.
 func (f *flags) parseOne() (bool, error) {
 	if len(f.args) == 0 {

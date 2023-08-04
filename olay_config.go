@@ -10,6 +10,8 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+type ErrorHandling int
+
 const (
 	internalFlagNameYamlFile = "olayc.file.yaml"
 	internalFlagNameJsonFile = "olayc.file.json"
@@ -21,13 +23,14 @@ const (
 type OlayConfig struct {
 	merged map[any]any
 
-	errorHandling int
+	silent bool // If silent is true, there will be no verbose logs.
 }
 
 // NewOlayConfig allocates and returns a new OlayConfig.
 func NewOlayConfig() *OlayConfig {
 	return &OlayConfig{
 		merged: make(map[any]any),
+		silent: false,
 	}
 }
 
@@ -36,14 +39,6 @@ func (c *OlayConfig) LoadYamlFile(filepath string) error {
 	var err error
 	var data []byte
 	var m = make(map[any]any)
-
-	defer func() {
-		if err != nil {
-			fmt.Printf("[OlayConfig] %v loaded error: %v\n", filepath, err)
-		} else {
-			fmt.Printf("[OlayConfig] %v loaded.\n", filepath)
-		}
-	}()
 
 	data, err = os.ReadFile(filepath)
 	if err != nil {
@@ -59,7 +54,9 @@ func (c *OlayConfig) LoadYamlFile(filepath string) error {
 	return nil
 }
 
-// Implement `ConfigSource`'s method.
+// Get value with the given key, return nil if doesn't exist.
+// The key is splitted by seperator '.', e.g. 'foo.name'.
+// The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
 // Return nil if key doesn't exist.
 func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
@@ -85,16 +82,41 @@ var defaultC = NewOlayConfig()
 // - Enviroments, e.g. FOO_NAME=hello
 // - Yaml files, specified by commandline `--olay.file.yaml=foo.yaml`
 // - Json files, specified by commandline `--olay.file.json=foo.json`
-func Load() error {
-	files := newCmdFiles()
-	err := files.parseFromArgs(os.Args[1:], internalFlagNameYamlFile, "OlayConfig internal, load yaml file")
-	if err != nil {
-		return errors.Wrap(err, "Load error")
+//
+// If encounter errors, e.g. load file fail, error message will be printed and call os.Exit(1).
+func Load() {
+	flgs := &flags{}
+	flgs.parse(os.Args[1:])
+
+	var yamlFiles []string
+	for _, kv := range flgs.kvs {
+		if kv.key == "olayc.silent" {
+			if strings.ToLower(kv.value) == "true" {
+				defaultC.silent = true
+			} else {
+				defaultC.silent = false
+			}
+		}
+		if kv.key == internalFlagNameYamlFile {
+			yamlFiles = append(yamlFiles, kv.value)
+		}
 	}
-	for _, file := range *files {
-		defaultC.LoadYamlFile(file)
+
+	if !defaultC.silent {
+		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
+		fmt.Println("[OlayConfig] Silent mode can be turned on with '--olayc.silent=true'.")
 	}
-	return nil
+
+	for _, file := range yamlFiles {
+		err := defaultC.LoadYamlFile(file)
+		if err != nil {
+			fmt.Printf("[OlayConfig] Load fail, error: %v\n", err)
+			os.Exit(1)
+		}
+		if !defaultC.silent {
+			fmt.Printf("[OlayConfig] Loaded yaml file %v.\n", file)
+		}
+	}
 }
 
 // Get from defaultC.

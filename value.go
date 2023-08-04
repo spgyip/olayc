@@ -11,11 +11,3 @@ type Value any
 	}
 	return s
 }*/
-
-// ConfigSource is the interface defines configure source behaviors.
-type ConfigSource interface {
-	// Get value with the given key, return nil if doesn't exist.
-	// The key is splitted by seperator '.', e.g. 'foo.name'.
-	// The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
-	Get(string) Value
-}
