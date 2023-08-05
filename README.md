@@ -3,7 +3,7 @@ Overlay configuration
 
 # Examples
 
-See `examples/`. Build with `make all`, binarieds are built in `bin/`.
+See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
 # Usage
 
