@@ -1,0 +1,7 @@
+foo:
+  id: 123
+  name: foo1
+  url: http://www.example.com
+  labels:
+    app: foo
+    zone: sz
