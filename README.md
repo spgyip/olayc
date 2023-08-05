@@ -18,14 +18,14 @@ olayc.Get("foo.id")
 Load yaml files with commandline arguments
 
 ```
-./bin/simple -olayc.file.yaml=./testdata/test1.yaml \
-         -olayc.file.yaml=./testdata/test2.yaml
+./bin/simple -oc.f.y=./testdata/test1.yaml \
+             -oc.f.y=./testdata/test2.yaml
 ```
 
 Turn on silent mode with commandline argument
 
 ```
-./bin/simple -olayc.silent=true
+./bin/simple -oc.s=true
 ```
 
 

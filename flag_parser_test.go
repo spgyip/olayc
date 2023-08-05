@@ -5,26 +5,27 @@ import (
 )
 
 func TestFlags(t *testing.T) {
-	fl := &flags{}
-	fl.parse([]string{
-		"--id=123",
-		"-name=foo1",
-		"-redis.host",
-		"redis.cluster",
-		"invalid",
-		"-switch",
-		"--redis.port",
-		"8306",
+	fp := &flagParser{}
+	fp.parse([]string{
+		"-name1=123",
+		"-name2", "123",
+		"--name3=123",
+		"--name4", "123",
+		"-on1",         // Bool value, default true
+		"-on2", "true", // Bool value
+		"-on3", "false", // Bool value
+		"invalid-arg",
 	})
 
-	var got = fl.kvs
-
+	var got = fp.kvs
 	var expect = []kv{
-		{"id", "123"},
-		{"name", "foo1"},
-		{"redis.host", "redis.cluster"},
-		{"switch", true},
-		{"redis.port", "8306"},
+		{"name1", "123"},
+		{"name2", "123"},
+		{"name3", "123"},
+		{"name4", "123"},
+		{"on1", true},
+		{"on2", true},
+		{"on3", false},
 	}
 
 	if len(expect) != len(got) {

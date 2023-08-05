@@ -11,18 +11,22 @@ type kv struct {
 	value any
 }
 
-type flags struct {
+type flagParser struct {
 	args []string
 	kvs  []kv
 }
 
 // Parse arguments. Invalid arguments will be ignored.
-// -name=foo  // parsed as <name, foo>
-// --name=foo // parsed as <name, foo>
-// -name foo  // parsed as <name, foo>
-// --name foo // parsed as <name, foo>
-// -switch    // parsed as <switch, true>
-func (f *flags) parse(args []string) int {
+// -name=foo | --name=foo            // parsed as <name, foo>
+// -name foo | --name foo            // parsed as <name, foo>
+// -on       | --on                  // parsed as <on, true>
+// -on false | --on false            // parsed as <on, false>
+// -on=false | --on=false            // parsed as <on, false>
+//
+// Value interpretation:
+// "true" => true   # Not case sensitive
+// "false" => false # Not case sensitive
+func (f *flagParser) parse(args []string) int {
 	f.args = args
 	end := false
 	for !end {
@@ -33,7 +37,7 @@ func (f *flags) parse(args []string) int {
 
 // Return true if encounter end of the last argument.
 // Return error if argument invalid.
-func (f *flags) parseOne() (bool, error) {
+func (f *flagParser) parseOne() (bool, error) {
 	if len(f.args) == 0 {
 		return true, nil
 	}
@@ -52,13 +56,14 @@ func (f *flags) parseOne() (bool, error) {
 
 	sps := strings.Split(key, "=")
 	if len(sps) == 1 {
-		// Format of '-name foo'
 		if len(f.args) == 0 || f.args[0][0] == '-' {
-			// It's the last argument,
-			// or next argument is not a value with prefix "-",
+			// This is the last argument,
+			// or the next argument is not a value with prefix "-",
 			// The value is parsed as true value of bool type.
-			value = true
+			// E.g. '-on'
+			value = "true"
 		} else if len(f.args) > 0 {
+			// E.g. '-name=foo'
 			// Get value from the next argument.
 			value = f.args[0]
 			f.args = f.args[1:]
@@ -67,6 +72,16 @@ func (f *flags) parseOne() (bool, error) {
 		// Format of '-name=foo'
 		key = sps[0]
 		value = sps[1]
+	}
+
+	// Interpret string value "true", "false" to bool type.
+	// TODO: interpret type int/uint/float64/array
+	if strVal, ok := value.(string); ok {
+		if strings.ToLower(strVal) == "true" {
+			value = true
+		} else if strings.ToLower(strVal) == "false" {
+			value = false
+		}
 	}
 	f.kvs = append(f.kvs, kv{key, value})
 
