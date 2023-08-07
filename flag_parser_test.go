@@ -11,6 +11,7 @@ func TestFlags(t *testing.T) {
 		"-name2", "123",
 		"--name3=123",
 		"--name4", "123",
+		"-id1", "123.0",
 		"-on1",         // Bool value, default true
 		"-on2", "true", // Bool value
 		"-on3", "false", // Bool value
@@ -19,10 +20,11 @@ func TestFlags(t *testing.T) {
 
 	var got = fp.kvs
 	var expect = []kv{
-		{"name1", "123"},
-		{"name2", "123"},
-		{"name3", "123"},
-		{"name4", "123"},
+		{"name1", 123},
+		{"name2", 123},
+		{"name3", 123},
+		{"name4", 123},
+		{"id1", 123.0},
 		{"on1", true},
 		{"on2", true},
 		{"on3", false},

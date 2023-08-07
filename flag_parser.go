@@ -6,11 +6,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// kv is composition of key and value.
 type kv struct {
 	key   string
 	value any
 }
 
+// flagParser parses from args to array of kvs.
 type flagParser struct {
 	args []string
 	kvs  []kv
@@ -43,7 +45,7 @@ func (f *flagParser) parseOne() (bool, error) {
 	}
 
 	key := f.args[0]
-	var value any
+	var strValue string
 	f.args = f.args[1:]
 
 	if len(key) >= 2 && key[0:2] == "--" {
@@ -61,28 +63,29 @@ func (f *flagParser) parseOne() (bool, error) {
 			// or the next argument is not a value with prefix "-",
 			// The value is parsed as true value of bool type.
 			// E.g. '-on'
-			value = "true"
+			strValue = "true"
 		} else if len(f.args) > 0 {
 			// E.g. '-name=foo'
 			// Get value from the next argument.
-			value = f.args[0]
+			strValue = f.args[0]
 			f.args = f.args[1:]
 		}
 	} else {
 		// Format of '-name=foo'
 		key = sps[0]
-		value = sps[1]
+		strValue = sps[1]
 	}
 
 	// Interpret string value "true", "false" to bool type.
 	// TODO: interpret type int/uint/float64/array
-	if strVal, ok := value.(string); ok {
+	/*if strVal, ok := value.(string); ok {
 		if strings.ToLower(strVal) == "true" {
 			value = true
 		} else if strings.ToLower(strVal) == "false" {
 			value = false
 		}
-	}
+	}*/
+	value := interpret(strValue)
 	f.kvs = append(f.kvs, kv{key, value})
 
 	return false, nil
