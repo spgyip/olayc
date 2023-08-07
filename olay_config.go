@@ -73,6 +73,32 @@ func (c *OlayConfig) Get(key string) Value {
 	return cur
 }
 
+func (c *OlayConfig) String(key string, value string) string {
+	return ""
+}
+func (c *OlayConfig) Int(key string, value int) int {
+	return 0
+}
+func (c *OlayConfig) Uint(key string, value uint) uint {
+	return 0
+}
+func (c *OlayConfig) Int64(key string, value int64) int64 {
+	return 0
+}
+func (c *OlayConfig) Uint64(key string, value uint64) uint64 {
+	return 0
+}
+func (c *OlayConfig) Float64(key string, value float64) float64 {
+	return 0.0
+}
+func (c *OlayConfig) Bool(key string, value bool) bool {
+	return false
+}
+
+func (c *OlayConfig) Unmarshal(key string, out any) error {
+	return nil
+}
+
 // `defaultC` is the default OlayConfig.
 var defaultC = NewOlayConfig()
 

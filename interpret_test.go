@@ -1,39 +1,34 @@
 package olayc
 
 import (
-	"reflect"
 	"testing"
 )
 
 func TestInterpret(t *testing.T) {
 	for _, test := range []struct {
 		val    string
-		expect reflect.Kind
+		expect any
 	}{
-		{"foo", reflect.String},
-		{"\"123\"", reflect.String},
-		{"\"123.0\"", reflect.String},
-		{"\"true\"", reflect.String},
-		{"\"false\"", reflect.String},
+		{"foo", string("foo")},
+		{"\"123\"", string("\"123\"")},
+		{"\"123.0\"", string("\"123.0\"")},
+		{"\"true\"", string("\"true\"")},
+		{"\"false\"", string("\"false\"")},
 
-		{"123", reflect.Int},
+		{"123", uint64(123)},
+		{"-123", int64(-123)},
 
-		{"123.0", reflect.Float64},
+		{"123.0", float64(123.0)},
+		{"-123.0", float64(-123.0)},
 
-		{"true", reflect.Bool},
-		{"True", reflect.Bool},
-		{"false", reflect.Bool},
-		{"False", reflect.Bool},
-		//{"1,2,3", reflect.Slice},
+		{"true", bool(true)},
+		{"True", bool(true)},
+		{"false", bool(false)},
+		{"False", bool(false)},
 	} {
-		gotVal := interpret(test.val)
-		if gotVal == nil {
-			t.Errorf("interpret fail: %v\n", test.val)
-			continue
-		}
-		got := reflect.TypeOf(gotVal).Kind()
+		got := interpret(test.val)
 		if got != test.expect {
-			t.Errorf("got(%v)!=expect(%v), value %v\n", got, test.expect, test.val)
+			t.Errorf("got(%v)!=expect(%v), value \"%v\"\n", got, test.expect, test.val)
 		}
 	}
 }

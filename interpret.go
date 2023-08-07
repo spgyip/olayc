@@ -9,11 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Interpret type of s.
+// Interpret type of string s.
 func typeInterpret(s string) reflect.Kind {
 	var isAllDigit = true
 	var cntDot = 0
-	for _, c := range s {
+	var isSigned = false
+	for i, c := range s {
+		if i == 0 && c == '-' {
+			isSigned = true
+			continue
+		}
 		if !unicode.IsDigit(c) && c != '.' {
 			isAllDigit = false
 			break
@@ -26,23 +31,33 @@ func typeInterpret(s string) reflect.Kind {
 		}
 	}
 
-	// If it's int or float64
-	if isAllDigit && cntDot == 1 {
-		return reflect.Float64
-	} else if isAllDigit {
-		return reflect.Int
+	// Default type is string
+	var kind reflect.Kind = reflect.String
+	if isAllDigit && cntDot <= 1 {
+		if cntDot == 0 {
+			if isSigned {
+				kind = reflect.Int64
+			} else {
+				kind = reflect.Uint64
+			}
+		} else {
+			kind = reflect.Float64
+		}
+	} else {
+		// Bool
+		sl := strings.ToLower(s)
+		if sl == "true" || sl == "false" {
+			kind = reflect.Bool
+		}
 	}
-
-	sl := strings.ToLower(s)
-	if sl == "true" || sl == "false" {
-		return reflect.Bool
-	}
-	return reflect.String
+	return kind
 }
 
 // Interpret string value to concrete type, return nil if fail.
+// Int/Uint type is interpreted as 64-bits(int64/uint64), allowing downcast to 32-bits type(int32/uint32).
 // foo, "123", "true", "false" => string
-// 123, -123                   => int
+// 123                         => uint64
+// -123                        => int64
 // 123.0                       => float64
 // true, false                 => bool
 func interpret(s string) any {
@@ -51,10 +66,12 @@ func interpret(s string) any {
 
 	kind := typeInterpret(s)
 	switch kind {
-	case reflect.Int:
-		v, err = strconv.Atoi(s)
+	case reflect.Int64:
+		v, err = strconv.ParseInt(s, 10, 64)
+	case reflect.Uint64:
+		v, err = strconv.ParseUint(s, 10, 64)
 	case reflect.Float64:
-		v, err = strconv.ParseFloat(s, 32)
+		v, err = strconv.ParseFloat(s, 64)
 	case reflect.String:
 		v, err = s, nil
 	case reflect.Bool:

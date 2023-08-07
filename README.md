@@ -18,6 +18,20 @@ Load default olayc and get value with key
 // simple/main.go
 olayc.Load()
 olayc.Get("foo.id")
+
+olayc.String("foo.name", "default")
+olayc.Int("foo.id", 0)
+olayc.Uint("foo.id", 0)
+olayc.Int64("foo.id", 0)
+olayc.Uint64("foo.id", 0)
+olayc.Float64("foo.id", 0)
+olayc.Bool("foo.onof", false)
+
+var redis = struct {
+    Host string `yaml:"host"`
+    Port int `yaml:"port"`
+}
+olayc.Unmarshal("foo.redis", &redis)
 ```
 
 Load yaml files with commandline arguments
