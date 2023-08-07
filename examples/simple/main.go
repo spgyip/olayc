@@ -9,7 +9,7 @@ import (
 func main() {
 	// TODO: olayc.Require()
 	olayc.Load()
-	fmt.Println(olayc.Get("foo.id"))
-	fmt.Println(olayc.Get("foo.name"))
-	fmt.Println(olayc.Get("foo.labels"))
+	fmt.Println(olayc.Int("foo.id", 99))
+	fmt.Println(olayc.String("foo.name", "foo"))
+	fmt.Println(olayc.String("foo.url", "http://www.default.com"))
 }

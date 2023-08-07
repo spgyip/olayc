@@ -56,7 +56,7 @@ func (c *OlayConfig) LoadYamlFile(filepath string) error {
 // Get value with the given key, return nil if doesn't exist.
 // The key is splitted by seperator '.', e.g. 'foo.name'.
 // The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
-// Return nil if key doesn't exist.
+// Return nil if it doesn't exist.
 func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
 	sps := strings.Split(key, ".")
@@ -73,26 +73,190 @@ func (c *OlayConfig) Get(key string) Value {
 	return cur
 }
 
-func (c *OlayConfig) String(key string, value string) string {
-	return ""
+// Get string value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) String(key string, defaultValue string) string {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var s = defaultValue
+	switch x := v.(type) {
+	case string:
+		s = x
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64,
+		bool:
+		s = fmt.Sprintf("%v", x)
+	}
+	return s
 }
-func (c *OlayConfig) Int(key string, value int) int {
-	return 0
+
+// Get int value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Int(key string, defaultValue int) int {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i int
+	switch x := v.(type) {
+	case int:
+		i = int(x)
+	case int8:
+		i = int(x)
+	case int16:
+		i = int(x)
+	case int32:
+		i = int(x)
+	case int64:
+		i = int(x)
+	case uint:
+		i = int(x)
+	case uint8:
+		i = int(x)
+	case uint16:
+		i = int(x)
+	case uint32:
+		i = int(x)
+	case uint64:
+		i = int(x)
+	default:
+		return defaultValue
+	}
+	return i
 }
-func (c *OlayConfig) Uint(key string, value uint) uint {
-	return 0
+
+// Get uint value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Uint(key string, defaultValue uint) uint {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i = defaultValue
+	switch x := v.(type) {
+	case int:
+		i = uint(x)
+	case int8:
+		i = uint(x)
+	case int16:
+		i = uint(x)
+	case int32:
+		i = uint(x)
+	case int64:
+		i = uint(x)
+	case uint:
+		i = uint(x)
+	case uint8:
+		i = uint(x)
+	case uint16:
+		i = uint(x)
+	case uint32:
+		i = uint(x)
+	case uint64:
+		i = uint(x)
+	}
+	return i
 }
-func (c *OlayConfig) Int64(key string, value int64) int64 {
-	return 0
+
+// Get int64 value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Int64(key string, defaultValue int64) int64 {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i = defaultValue
+	switch x := v.(type) {
+	case int:
+		i = int64(x)
+	case int8:
+		i = int64(x)
+	case int16:
+		i = int64(x)
+	case int32:
+		i = int64(x)
+	case int64:
+		i = int64(x)
+	case uint:
+		i = int64(x)
+	case uint8:
+		i = int64(x)
+	case uint16:
+		i = int64(x)
+	case uint32:
+		i = int64(x)
+	case uint64:
+		i = int64(x)
+	}
+	return i
 }
-func (c *OlayConfig) Uint64(key string, value uint64) uint64 {
-	return 0
+
+// Get uint64 value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Uint64(key string, defaultValue uint64) uint64 {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i = defaultValue
+	switch x := v.(type) {
+	case int:
+		i = uint64(x)
+	case int8:
+		i = uint64(x)
+	case int16:
+		i = uint64(x)
+	case int32:
+		i = uint64(x)
+	case int64:
+		i = uint64(x)
+	case uint:
+		i = uint64(x)
+	case uint8:
+		i = uint64(x)
+	case uint16:
+		i = uint64(x)
+	case uint32:
+		i = uint64(x)
+	case uint64:
+		i = uint64(x)
+	}
+	return i
 }
-func (c *OlayConfig) Float64(key string, value float64) float64 {
-	return 0.0
+
+// Get float64 value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Float64(key string, defaultValue float64) float64 {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i = defaultValue
+	switch x := v.(type) {
+	case float32:
+		i = float64(x)
+	case float64:
+		i = float64(x)
+	}
+	return i
 }
-func (c *OlayConfig) Bool(key string, value bool) bool {
-	return false
+
+// Get bool value, return defaultValue if it doesn't exist.
+func (c *OlayConfig) Bool(key string, defaultValue bool) bool {
+	v := c.Get(key)
+	if v == nil {
+		return defaultValue
+	}
+
+	var i = defaultValue
+	switch x := v.(type) {
+	case bool:
+		i = bool(x)
+	}
+	return i
 }
 
 func (c *OlayConfig) Unmarshal(key string, out any) error {
@@ -156,7 +320,42 @@ func Load() {
 	}
 }
 
-// Get value with the default OlaycConfig .
+// Get value with default OlaycConfig .
 func Get(key string) Value {
 	return defaultC.Get(key)
+}
+
+// Get string with default OlayConfig
+func String(key string, defaultValue string) string {
+	return defaultC.String(key, defaultValue)
+}
+
+// Get int with default OlayConfig
+func Int(key string, defaultValue int) int {
+	return defaultC.Int(key, defaultValue)
+}
+
+// Get uint with default OlayConfig
+func Uint(key string, defaultValue uint) uint {
+	return defaultC.Uint(key, defaultValue)
+}
+
+// Get int64 with default OlayConfig
+func Int64(key string, defaultValue int64) int64 {
+	return defaultC.Int64(key, defaultValue)
+}
+
+// Get uint64 with default OlayConfig
+func Uint64(key string, defaultValue uint64) uint64 {
+	return defaultC.Uint64(key, defaultValue)
+}
+
+// Get float64 with default OlayConfig
+func Float64(key string, defaultValue float64) float64 {
+	return defaultC.Float64(key, defaultValue)
+}
+
+// Get bool with default OlayConfig
+func Bool(key string, defaultValue bool) bool {
+	return defaultC.Bool(key, defaultValue)
 }
