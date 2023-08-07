@@ -43,10 +43,11 @@ func (f *flagParser) parseOne() (bool, error) {
 	if len(f.args) == 0 {
 		return true, nil
 	}
-
 	key := f.args[0]
-	var strValue string
 	f.args = f.args[1:]
+
+	var value any
+	var strValue string
 
 	if len(key) >= 2 && key[0:2] == "--" {
 		key = key[2:]
@@ -61,7 +62,7 @@ func (f *flagParser) parseOne() (bool, error) {
 		if len(f.args) == 0 || f.args[0][0] == '-' {
 			// This is the last argument,
 			// or the next argument is not a value with prefix "-",
-			// The value is parsed as true value of bool type.
+			// The value is parsed as "true" value.
 			// E.g. '-on'
 			strValue = "true"
 		} else if len(f.args) > 0 {
@@ -76,16 +77,8 @@ func (f *flagParser) parseOne() (bool, error) {
 		strValue = sps[1]
 	}
 
-	// Interpret string value "true", "false" to bool type.
-	// TODO: interpret type int/uint/float64/array
-	/*if strVal, ok := value.(string); ok {
-		if strings.ToLower(strVal) == "true" {
-			value = true
-		} else if strings.ToLower(strVal) == "false" {
-			value = false
-		}
-	}*/
-	value := interpret(strValue)
+	// Interpret string to concrete type value
+	value = interpret(strValue)
 	f.kvs = append(f.kvs, kv{key, value})
 
 	return false, nil

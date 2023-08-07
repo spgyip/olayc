@@ -101,6 +101,10 @@ func Load() {
 			help = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
+		} else if kv.key[:3] == "oc." {
+			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
+			usage()
+			os.Exit(1)
 		}
 	}
 

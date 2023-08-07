@@ -12,21 +12,26 @@ func TestInterpret(t *testing.T) {
 	}{
 		{"foo", reflect.String},
 		{"\"123\"", reflect.String},
-		{"123", reflect.Int},
-		{"123.0", reflect.Float64},
 		{"\"123.0\"", reflect.String},
-		{"true", reflect.Bool},
-		{"false", reflect.Bool},
 		{"\"true\"", reflect.String},
 		{"\"false\"", reflect.String},
+
+		{"123", reflect.Int},
+
+		{"123.0", reflect.Float64},
+
+		{"true", reflect.Bool},
+		{"True", reflect.Bool},
+		{"false", reflect.Bool},
+		{"False", reflect.Bool},
 		//{"1,2,3", reflect.Slice},
 	} {
-		valI := interpret(test.val)
-		if valI == nil {
-			t.Errorf("interpret got nil, value %v\n", test.val)
+		gotVal := interpret(test.val)
+		if gotVal == nil {
+			t.Errorf("interpret fail: %v\n", test.val)
 			continue
 		}
-		got := reflect.TypeOf(valI).Kind()
+		got := reflect.TypeOf(gotVal).Kind()
 		if got != test.expect {
 			t.Errorf("got(%v)!=expect(%v), value %v\n", got, test.expect, test.val)
 		}
