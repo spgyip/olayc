@@ -1,6 +1,11 @@
 Overlay configuration
 ===================================
 
+OlayConfig is composition of multiple configure sources, each source is overlayed from bottom to top.
+The top layer is visible if there is key conflicted among layers.
+
+![layers](readme/images/layers.png)
+
 # Examples
 
 See `examples/`. Build with `make all`, binaries are built in `bin/`.
