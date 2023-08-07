@@ -1,6 +1,8 @@
 Overlay configuration
 ===================================
 
+![layers](readme/images/layers.png)
+
 # Examples
 
 See `examples/`. Build with `make all`, binaries are built in `bin/`.
