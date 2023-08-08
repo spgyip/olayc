@@ -53,8 +53,8 @@ func typeInterpret(s string) reflect.Kind {
 	return kind
 }
 
-// Interpret string value to concrete type, return nil if fail.
-// Int/Uint type is interpreted as 64-bits(int64/uint64), allowing downcast to 32-bits type(int32/uint32).
+// Interpret string to type value, return nil if fails.
+// Int/Uint type is interpreted as 64-bits(int64/uint64), allows downcast to 32-bits type(int32/uint32) as necessary.
 // foo, "123", "true", "false" => string
 // 123                         => uint64
 // -123                        => int64

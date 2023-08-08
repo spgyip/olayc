@@ -26,8 +26,8 @@ type OlayConfig struct {
 	merged map[any]any
 }
 
-// NewOlayConfig allocates and returns a new OlayConfig.
-func NewOlayConfig() *OlayConfig {
+// New allocates and returns a new OlayConfig.
+func New() *OlayConfig {
 	return &OlayConfig{
 		merged: make(map[any]any),
 	}
@@ -35,20 +35,20 @@ func NewOlayConfig() *OlayConfig {
 
 // Load yaml config from file, stack on top layer
 func (c *OlayConfig) LoadYamlFile(filepath string) error {
-	var err error
-	var data []byte
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		return errors.Wrap(err, "LoadYamlFile error")
+	}
+	return c.LoadYamlBytes(data)
+}
+
+// Load yaml from bytes.
+func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 	var m = make(map[any]any)
-
-	data, err = os.ReadFile(filepath)
+	err := yaml.Unmarshal(data, &m)
 	if err != nil {
-		return errors.Wrap(err, "LoadYamlFile error")
+		return errors.Wrap(err, "LoadYamlBytes error")
 	}
-
-	err = yaml.Unmarshal(data, &m)
-	if err != nil {
-		return errors.Wrap(err, "LoadYamlFile error")
-	}
-
 	copyMap(c.merged, m)
 	return nil
 }
@@ -61,6 +61,10 @@ func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
+		/*switch cur.(type) {
+		case reflect.Map:
+		default:
+		}*/
 		if reflect.TypeOf(cur).Kind() != reflect.Map {
 			return nil
 		}
@@ -264,7 +268,7 @@ func (c *OlayConfig) Unmarshal(key string, out any) error {
 }
 
 // `defaultC` is the default OlayConfig.
-var defaultC = NewOlayConfig()
+var defaultC = New()
 
 // Load the default OlayConfig from configure sources:
 // - Commandline arguments, e.g. -foo.name=foo

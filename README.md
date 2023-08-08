@@ -1,7 +1,7 @@
 Overlay configuration
 ===================================
 
-OlayConfig is composition of multiple configure sources, each source is overlayed from bottom to top.
+Overlay configuration is composition of multiple configure sources, each source is overlayed from bottom to top.
 The top layer is visible if there is key conflicted among layers.
 
 ![layers](readme/images/layers.png)
@@ -29,7 +29,7 @@ Load yaml files with commandline arguments
              -oc.f.y=./testdata/test2.yaml
 ```
 
-Turn on silent mode with commandline argument
+Turn on silent mode with `-oc.s`:
 
 ```
 ./bin/simple -oc.s \
