@@ -27,7 +27,7 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 ## Single value
 
-```
+```go
 olayc.Load()
 id := olayc.Int("foo.id", 99))
 name: = olayc.String("foo.name", "foo")
@@ -36,7 +36,9 @@ url := olayc.String("foo.url", "http://www.default.com"))
 
 ## Unmarshal
 
-```
+Unmarshal is using yaml field tags.
+
+```go
 var cfg struct {
 	Id   int    `yaml:'id'`
 	Name string `yaml: 'name'`
@@ -45,5 +47,5 @@ var cfg struct {
 
 olayc.Load()
 olayc.Unmarshal("foo", &cfg)
-``
+```
 
