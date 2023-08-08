@@ -255,8 +255,16 @@ func (c *OlayConfig) Bool(key string, defaultValue bool) bool {
 	return i
 }
 
+// Unmarshal is implemented by using yaml utility,
+// value is firstly marshalled to yaml bytes,
+// then the yaml bytes is unmarshal to target out.
+// Thus, if 'out' is a struct, you must use the yaml struct tag.
 func (c *OlayConfig) Unmarshal(key string, out any) error {
-	return nil
+	v := c.Get(key)
+	if v == nil {
+		return errors.New("key doesn't exist")
+	}
+	return UnmarshalValue(v, out)
 }
 
 // `defaultC` is the default OlayConfig.
@@ -354,4 +362,9 @@ func Float64(key string, defaultValue float64) float64 {
 // Get bool with default OlayConfig
 func Bool(key string, defaultValue bool) bool {
 	return defaultC.Bool(key, defaultValue)
+}
+
+// Unmarshal with default OlayConfig
+func Unmarshal(key string, out any) error {
+	return defaultC.Unmarshal(key, out)
 }

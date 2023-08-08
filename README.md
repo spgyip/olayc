@@ -10,26 +10,12 @@ The top layer is visible if there is key conflicted among layers.
 
 See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
-# Usage
-
-Load default olayc and get value with key
-
-```
-// simple/main.go
-olayc.Load()
-id := olayc.Int("foo.id", 99))
-name: = olayc.String("foo.name", "foo")
-url := olayc.String("foo.url", "http://www.default.com"))
-```
-
-Load yaml files with commandline arguments
-
 ```
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
 ```
 
-Turn on silent mode with `-oc.s`:
+There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 ```
 ./bin/simple -oc.s \
@@ -37,7 +23,27 @@ Turn on silent mode with `-oc.s`:
              -oc.f.y=./testdata/test2.yaml
 ```
 
+# Usage
 
+## Single value
 
+```
+olayc.Load()
+id := olayc.Int("foo.id", 99))
+name: = olayc.String("foo.name", "foo")
+url := olayc.String("foo.url", "http://www.default.com"))
+```
 
+## Unmarshal
+
+```
+var cfg struct {
+	Id   int    `yaml:'id'`
+	Name string `yaml: 'name'`
+	Url  string `yaml: 'url'`
+}
+
+olayc.Load()
+olayc.Unmarshal("foo", &cfg)
+``
 
