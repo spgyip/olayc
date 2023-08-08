@@ -90,3 +90,15 @@ func interpret(s string) any {
 	}
 	return v
 }
+
+// Return if all characters in s are digital('0'-'9')
+func isAllDigit(s string) bool {
+	is := true
+	for _, c := range s {
+		if !(c >= '0' && c < '9') {
+			is = false
+			break
+		}
+	}
+	return is
+}

@@ -54,27 +54,28 @@ func (f *flagParser) parseOne() (bool, error) {
 	} else if len(key) >= 1 && key[0:1] == "-" {
 		key = key[1:]
 	} else {
-		return false, errors.Errorf("argument invalid: %v", key)
+		return false, errors.Errorf("Invalid argument: %v", key)
 	}
 
-	sps := strings.Split(key, "=")
-	if len(sps) == 1 {
-		if len(f.args) == 0 || f.args[0][0] == '-' {
-			// This is the last argument,
-			// or the next argument is not a value with prefix "-",
-			// The value is parsed as "true" value.
-			// E.g. '-on'
+	// Find '=' in key, there are cases:
+	// "-name=foo" => <name, foo>
+	// "-name foo" => <name, foo>
+	// "-onoff"     => <onoff, true>
+	// "-onof -name=foo" => <onoff, true>, <name, foo>
+	pos := strings.IndexByte(key, '=')
+	if pos < 0 {
+		if len(f.args) == 0 || (f.args[0][0] == '-' && !isAllDigit(f.args[0][1:])) {
+			// E.g. '-onoff'
 			strValue = "true"
 		} else if len(f.args) > 0 {
-			// E.g. '-name=foo'
-			// Get value from the next argument.
+			// E.g. '-name foo'
 			strValue = f.args[0]
 			f.args = f.args[1:]
 		}
 	} else {
-		// Format of '-name=foo'
-		key = sps[0]
-		strValue = sps[1]
+		// E.g. '-name=foo'
+		strValue = key[pos+1:]
+		key = key[:pos]
 	}
 
 	// Interpret string to concrete type value
