@@ -114,6 +114,72 @@ foo:
 		if got != test.expect {
 			t.Errorf("[%v] got(\"%v\")!=expect(\"%v\")\n", i, got, test.expect)
 		}
+	}
+}
 
+func TestConfigUnmarshalRoot(t *testing.T) {
+	var testdata = []byte(`
+foo:
+  id: 123
+  name: foo1
+`)
+
+	type testConfig struct {
+		Foo struct {
+			Id   int    `yaml:'id'`
+			Name string `yaml:'name'`
+		} `yaml: 'foo'`
+	}
+
+	var got testConfig
+	var expect = testConfig{
+		Foo: struct {
+			Id   int    `yaml:'id'`
+			Name string `yaml:'name'`
+		}{Id: 123, Name: "foo1"},
+	}
+
+	var c = New()
+	err := c.LoadYamlBytes(testdata)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Unmarshal(Root, &got)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(expect, got) {
+		t.Fatalf("expect(%v)!=got(%v)\n", expect, got)
+	}
+}
+
+func TestConfigUnmarshalSubTrue(t *testing.T) {
+	var testdata = []byte(`
+foo:
+  id: 123
+  name: foo1
+`)
+
+	type testConfig struct {
+		Id   int    `yaml:'id'`
+		Name string `yaml:'name'`
+	}
+
+	var got testConfig
+	var expect = testConfig{Id: 123, Name: "foo1"}
+
+	var c = New()
+	err := c.LoadYamlBytes(testdata)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Unmarshal("foo", &got)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(expect, got) {
+		t.Fatalf("expect(%v)!=got(%v)\n", expect, got)
 	}
 }
