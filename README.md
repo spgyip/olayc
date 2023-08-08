@@ -39,13 +39,16 @@ url := olayc.String("foo.url", "http://www.default.com"))
 Unmarshal is using yaml field tags.
 
 ```go
+
 var cfg struct {
-	Id   int    `yaml:'id'`
-	Name string `yaml: 'name'`
-	Url  string `yaml: 'url'`
+	Foo struct {
+		Id   int    `yaml:'id'`
+		Name string `yaml: 'name'`
+		Url  string `yaml: 'url'`
+	} `yaml: 'foo'`
 }
 
 olayc.Load()
-olayc.Unmarshal("foo", &cfg)
+olayc.Unmarshal(olayc.Root, &cfg)
 ```
 

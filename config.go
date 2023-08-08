@@ -9,6 +9,11 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const (
+	// Root value
+	Root = ""
+)
+
 // Print OlayConfig usage.
 func usage() {
 	fmt.Println("Usage of olayc:")
@@ -58,6 +63,9 @@ func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 // Return nil if it doesn't exist.
 func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
+	if key == Root {
+		return cur
+	}
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
 		next, ok := cur.(map[any]any)[sp]
