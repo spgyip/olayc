@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// TODO: olayc.Require()
 	olayc.Load()
 	fmt.Println(olayc.Int("foo.id", 99))
 	fmt.Println(olayc.String("foo.name", "foo"))
