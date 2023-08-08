@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestOlayConfigYamlSingle(t *testing.T) {
+func TestConfigYamlSingle(t *testing.T) {
 	var testdata = []byte(`
 foo:
   name: test-foo
@@ -60,7 +60,7 @@ foo:
 	}
 }
 
-func TestOlayConfigYamlOverlay(t *testing.T) {
+func TestConfigYamlOverlay(t *testing.T) {
 	var testdata1 = []byte(`
 foo:
   name: foo1

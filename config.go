@@ -3,7 +3,6 @@ package olayc
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -61,13 +60,6 @@ func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
-		/*switch cur.(type) {
-		case reflect.Map:
-		default:
-		}*/
-		if reflect.TypeOf(cur).Kind() != reflect.Map {
-			return nil
-		}
 		next, ok := cur.(map[any]any)[sp]
 		if !ok {
 			return nil
