@@ -6,16 +6,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// kv is composition of key and value.
-type kv struct {
+// KV is composition of key and value.
+type KV struct {
 	key   string
 	value any
 }
 
-// flagParser parses from args to array of kvs.
+// flagParser parses from args to kvs.
 type flagParser struct {
 	args []string
-	kvs  []kv
+	kvs  []KV
 }
 
 // Parse arguments. Invalid arguments will be ignored.
@@ -80,7 +80,7 @@ func (f *flagParser) parseOne() (bool, error) {
 
 	// Interpret string to concrete type value
 	value = interpret(strValue)
-	f.kvs = append(f.kvs, kv{key, value})
+	f.kvs = append(f.kvs, KV{key, value})
 
 	return false, nil
 }
