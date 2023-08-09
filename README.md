@@ -79,6 +79,8 @@ The default olayc has default priority when multiple configure sources are loade
 - Environment variables
 - Yaml/Json Files, left prior
 
+> In fact, the source has more priority is placed on upper layer.
+
 # Tests
 
 Make sure run tests with `make test` if you fork this repo and try to add some features.
