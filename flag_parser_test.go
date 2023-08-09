@@ -21,7 +21,7 @@ func TestFlags(t *testing.T) {
 	})
 
 	var got = fp.kvs
-	var expect = []kv{
+	var expect = []KV{
 		{"id1", uint64(123)},
 		{"id2", uint64(123)},
 		{"id3", uint64(123)},

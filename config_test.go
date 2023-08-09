@@ -5,6 +5,34 @@ import (
 	"testing"
 )
 
+// TODO: Add tests for success Get.
+func TestConfigGetValueNotExisit(t *testing.T) {
+	var testdata = []byte(`
+foo:
+  name: foo1
+  id: 123
+`)
+
+	var c = New()
+	err := c.LoadYamlBytes(testdata)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, test := range []struct {
+		key string
+	}{
+		{"fooa"},
+		{"foo.namea"},
+		{"foo.name.a"},
+	} {
+		got := c.Get(test.key)
+		if got != nil {
+			t.Errorf("[%v] got not nil(%v), expect nil\n", i, got)
+		}
+	}
+}
+
 func TestConfigYamlSingle(t *testing.T) {
 	var testdata = []byte(`
 foo:
@@ -27,6 +55,7 @@ foo:
 		expect       any
 	}{
 		{"foo.name", "", reflect.String, "test-foo"},
+		{"foo.name.not-exist", "default-name", reflect.String, "default-name"},
 		{"foo.id", int(0), reflect.Int, int(123)},
 		{"foo.id", uint(0), reflect.Uint, uint(123)},
 		{"foo.id", int64(0), reflect.Int64, int64(123)},

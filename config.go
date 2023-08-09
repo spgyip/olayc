@@ -59,17 +59,38 @@ func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 
 // Load from arguments.
 // The internal olayc flags which prefix with `-oc.|--oc.` are ignored.
-/*func (c *OlayConfig) LoadFromArgs(args []string) error {
+func (c *OlayConfig) LoadFromArgs(args []string) error {
+	var kvs []KV
 	fp := &flagParser{}
 	fp.parse(os.Args[1:])
 	for _, kv := range fp.kvs {
+		if strings.HasPrefix(kv.key, "oc.") {
+			continue
+		}
+		kvs = append(kvs, kv)
 	}
+	return c.LoadFromKVs(kvs)
 }
 
-func (c *OlayConfig) LoadFromKvs() erro {
-
+// Load from key-value pairs.
+func (c *OlayConfig) LoadFromKVs(kvs []KV) error {
+	var m = make(map[any]any)
+	var cur = m
+	for _, kv := range kvs {
+		sps := strings.Split(kv.key, ".")
+		for i, sp := range sps {
+			if i == len(sps)-1 {
+				cur[sp] = kv.value
+			} else {
+				if _, ok := cur[sp]; !ok {
+					cur[sp] = make(map[any]any)
+				}
+				cur = cur[sp].(map[any]any)
+			}
+		}
+	}
+	return nil
 }
-*/
 
 // Get value with the given key, return nil if doesn't exist.
 // The key is splitted by seperator '.', e.g. 'foo.name'.
@@ -82,11 +103,16 @@ func (c *OlayConfig) Get(key string) Value {
 	}
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
-		next, ok := cur.(map[any]any)[sp]
-		if !ok {
-			return nil
+		var ok bool
+		var curM map[any]any
+		if curM, ok = cur.(map[any]any); !ok {
+			cur = nil
+			break
 		}
-		cur = next
+		if cur, ok = curM[sp]; !ok {
+			cur = nil
+			break
+		}
 	}
 	return cur
 }
@@ -317,7 +343,7 @@ func Load() {
 			help = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
-		} else if kv.key[:3] == "oc." {
+		} else if strings.HasPrefix(kv.key, "oc.") {
 			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
 			usage()
 			os.Exit(1)
