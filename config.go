@@ -62,7 +62,7 @@ func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 func (c *OlayConfig) LoadFromArgs(args []string) error {
 	var kvs []KV
 	fp := &flagParser{}
-	fp.parse(os.Args[1:])
+	fp.parse(args)
 	for _, kv := range fp.kvs {
 		if strings.HasPrefix(kv.key, "oc.") {
 			continue
@@ -75,20 +75,22 @@ func (c *OlayConfig) LoadFromArgs(args []string) error {
 // Load from key-value pairs.
 func (c *OlayConfig) LoadFromKVs(kvs []KV) error {
 	var m = make(map[any]any)
-	var cur = m
 	for _, kv := range kvs {
+		var cur any = m
 		sps := strings.Split(kv.key, ".")
-		for i, sp := range sps {
-			if i == len(sps)-1 {
-				cur[sp] = kv.value
+		for j, sp := range sps {
+			curM := cur.(map[any]any)
+			if j == len(sps)-1 {
+				curM[sp] = kv.value
 			} else {
-				if _, ok := cur[sp]; !ok {
-					cur[sp] = make(map[any]any)
+				if _, ok := curM[sp]; !ok {
+					curM[sp] = make(map[any]any)
 				}
-				cur = cur[sp].(map[any]any)
+				cur = curM[sp]
 			}
 		}
 	}
+	copyMap(c.merged, m)
 	return nil
 }
 
@@ -324,7 +326,7 @@ var defaultC = New()
 // - Yaml files, e.g. `-oc.f.y=foo.yaml`
 // - Json files, e.g. `-oc.f.j=foo.json`
 //
-// If encounter errors, e.g. load file fail, error message will be printed and call os.Exit(1).
+// If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
 func Load() {
 	var yamlFiles []string
 	var help = false
