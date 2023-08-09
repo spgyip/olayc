@@ -43,11 +43,11 @@ func (c *OlayConfig) LoadYamlFile(filepath string) error {
 	if err != nil {
 		return errors.Wrap(err, "LoadYamlFile error")
 	}
-	return c.LoadYamlBytes(data)
+	return c.LoadYaml(data)
 }
 
 // Load yaml from bytes.
-func (c *OlayConfig) LoadYamlBytes(data []byte) error {
+func (c *OlayConfig) LoadYaml(data []byte) error {
 	var m = make(map[any]any)
 	err := yaml.Unmarshal(data, &m)
 	if err != nil {
@@ -55,6 +55,45 @@ func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 	}
 	copyMap(c.merged, m)
 	return nil
+}
+
+// Load from arguments.
+// Return numbers of kvs loaded.
+// The internal olayc flags which prefix with `-oc.|--oc.` are ignored.
+func (c *OlayConfig) LoadArgs(args []string) (int, error) {
+	var kvs []KV
+	fp := &flagParser{}
+	fp.parse(args)
+	for _, kv := range fp.kvs {
+		if strings.HasPrefix(kv.key, internalFlagPrefix) {
+			continue
+		}
+		kvs = append(kvs, kv)
+	}
+	return c.LoadKVs(kvs)
+}
+
+// Load from key-value pairs.
+// Return number of kvs loaded.
+func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
+	var m = make(map[any]any)
+	for _, kv := range kvs {
+		var cur any = m
+		sps := strings.Split(kv.key, ".")
+		for j, sp := range sps {
+			curM := cur.(map[any]any)
+			if j == len(sps)-1 {
+				curM[sp] = kv.value
+			} else {
+				if _, ok := curM[sp]; !ok {
+					curM[sp] = make(map[any]any)
+				}
+				cur = curM[sp]
+			}
+		}
+	}
+	copyMap(c.merged, m)
+	return len(kvs), nil
 }
 
 // Get value with the given key, return nil if doesn't exist.
@@ -68,11 +107,16 @@ func (c *OlayConfig) Get(key string) Value {
 	}
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
-		next, ok := cur.(map[any]any)[sp]
-		if !ok {
-			return nil
+		var ok bool
+		var curM map[any]any
+		if curM, ok = cur.(map[any]any); !ok {
+			cur = nil
+			break
 		}
-		cur = next
+		if cur, ok = curM[sp]; !ok {
+			cur = nil
+			break
+		}
 	}
 	return cur
 }
@@ -284,7 +328,7 @@ var defaultC = New()
 // - Yaml files, e.g. `-oc.f.y=foo.yaml`
 // - Json files, e.g. `-oc.f.j=foo.json`
 //
-// If encounter errors, e.g. load file fail, error message will be printed and call os.Exit(1).
+// If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
 func Load() {
 	var yamlFiles []string
 	var help = false
@@ -303,7 +347,7 @@ func Load() {
 			help = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
-		} else if kv.key[:3] == "oc." {
+		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
 			usage()
 			os.Exit(1)
@@ -320,6 +364,16 @@ func Load() {
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
 	}
 
+	// Load order: Commandline args -> Yaml files
+	n, err := defaultC.LoadArgs(os.Args[1:])
+	if err != nil {
+		fmt.Printf("[OlayConfig] Load arguments fail, error: %v]\n", err)
+		os.Exit(1)
+	}
+	if !silent {
+		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
+	}
+
 	for _, file := range yamlFiles {
 		err := defaultC.LoadYamlFile(file)
 		if err != nil {
@@ -327,7 +381,7 @@ func Load() {
 			os.Exit(1)
 		}
 		if !silent {
-			fmt.Printf("[OlayConfig] Loaded yaml file %v.\n", file)
+			fmt.Printf("[OlayConfig] Yaml file loaded: %v.\n", file)
 		}
 	}
 }

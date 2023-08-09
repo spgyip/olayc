@@ -87,8 +87,8 @@ func copyMapDFS(dst map[any]any, src map[any]any) {
 		// which means it's a leaf node, keep the dst value and ignore the src value.
 		typDst := reflect.TypeOf(valDst)
 		switch typDst.Kind() {
-		case reflect.Int, reflect.Int32,
-			reflect.Int64, reflect.Uint,
+		case reflect.Int, reflect.Int8,
+			reflect.Int32, reflect.Int64, reflect.Uint,
 			reflect.Uint32, reflect.Uint64,
 			reflect.Float32, reflect.Float64,
 			reflect.String, reflect.Bool,

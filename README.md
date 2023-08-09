@@ -52,3 +52,6 @@ olayc.Load()
 olayc.Unmarshal(olayc.Root, &cfg)
 ```
 
+# Tests
+
+Make sure run tests with `make test` if you fork this repo and try to add some features.
