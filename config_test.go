@@ -33,7 +33,7 @@ foo:
 	}
 }
 
-func TestConfigYamlSingle(t *testing.T) {
+func TestConfigLoadYaml(t *testing.T) {
 	var testdata = []byte(`
 foo:
   name: test-foo
@@ -89,7 +89,7 @@ foo:
 	}
 }
 
-func TestConfigYamlOverlay(t *testing.T) {
+func TestConfigLoadYamlOverlay(t *testing.T) {
 	var testdata1 = []byte(`
 foo:
   name: foo1
@@ -146,7 +146,7 @@ foo:
 	}
 }
 
-func TestConfigYamlUnmarshalRoot(t *testing.T) {
+func TestConfigUnmarshalRoot(t *testing.T) {
 	var testdata = []byte(`
 foo:
   id: 123
@@ -183,7 +183,7 @@ foo:
 	}
 }
 
-func TestConfigYamlUnmarshalSubTrue(t *testing.T) {
+func TestConfigUnmarshalSubTrue(t *testing.T) {
 	var testdata = []byte(`
 foo:
   id: 123
@@ -319,6 +319,64 @@ func TestConfigLoadArgs(t *testing.T) {
 
 		if got != test.expect {
 			t.Errorf("[%v] key=%v, got(\"%v\")!=expect(\"%v\")\n", i, test.key, got, test.expect)
+		}
+	}
+}
+
+func TestConfigLoadYamlArgsOverlay(t *testing.T) {
+	var args = []string{
+		"-foo.name", "foo1",
+		"-foo.id=123",
+	}
+	var testyaml = []byte(`
+foo:
+  name: foo-bad
+  redis:
+    host: redis.cluster
+    port: 6380
+`)
+
+	var c = New()
+	err := c.LoadFromArgs(args)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.LoadYamlBytes(testyaml)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, test := range []struct {
+		key          string
+		defaultValue any
+		knd          reflect.Kind
+		expect       any
+	}{
+		{"foo.name", "", reflect.String, "foo1"},
+		{"foo.id", int(0), reflect.Int, int(123)},
+		{"foo.redis.host", "", reflect.String, "redis.cluster"},
+		{"foo.redis.port", int(0), reflect.Int, int(6380)},
+	} {
+		var got any
+		switch test.knd {
+		case reflect.String:
+			got = c.String(test.key, test.defaultValue.(string))
+		case reflect.Int:
+			got = c.Int(test.key, test.defaultValue.(int))
+		case reflect.Uint:
+			got = c.Uint(test.key, test.defaultValue.(uint))
+		case reflect.Int64:
+			got = c.Int64(test.key, test.defaultValue.(int64))
+		case reflect.Uint64:
+			got = c.Uint64(test.key, test.defaultValue.(uint64))
+		case reflect.Float64:
+			got = c.Float64(test.key, test.defaultValue.(float64))
+		case reflect.Bool:
+			got = c.Bool(test.key, test.defaultValue.(bool))
+		}
+
+		if got != test.expect {
+			t.Errorf("[%v] got(\"%v\")!=expect(\"%v\")\n", i, got, test.expect)
 		}
 	}
 }
