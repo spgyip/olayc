@@ -43,11 +43,11 @@ func (c *OlayConfig) LoadYamlFile(filepath string) error {
 	if err != nil {
 		return errors.Wrap(err, "LoadYamlFile error")
 	}
-	return c.LoadYamlBytes(data)
+	return c.LoadYaml(data)
 }
 
 // Load yaml from bytes.
-func (c *OlayConfig) LoadYamlBytes(data []byte) error {
+func (c *OlayConfig) LoadYaml(data []byte) error {
 	var m = make(map[any]any)
 	err := yaml.Unmarshal(data, &m)
 	if err != nil {
@@ -58,22 +58,24 @@ func (c *OlayConfig) LoadYamlBytes(data []byte) error {
 }
 
 // Load from arguments.
+// Return numbers of kvs loaded.
 // The internal olayc flags which prefix with `-oc.|--oc.` are ignored.
-func (c *OlayConfig) LoadFromArgs(args []string) error {
+func (c *OlayConfig) LoadArgs(args []string) (int, error) {
 	var kvs []KV
 	fp := &flagParser{}
 	fp.parse(args)
 	for _, kv := range fp.kvs {
-		if strings.HasPrefix(kv.key, "oc.") {
+		if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			continue
 		}
 		kvs = append(kvs, kv)
 	}
-	return c.LoadFromKVs(kvs)
+	return c.LoadKVs(kvs)
 }
 
 // Load from key-value pairs.
-func (c *OlayConfig) LoadFromKVs(kvs []KV) error {
+// Return number of kvs loaded.
+func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
 	var m = make(map[any]any)
 	for _, kv := range kvs {
 		var cur any = m
@@ -91,7 +93,7 @@ func (c *OlayConfig) LoadFromKVs(kvs []KV) error {
 		}
 	}
 	copyMap(c.merged, m)
-	return nil
+	return len(kvs), nil
 }
 
 // Get value with the given key, return nil if doesn't exist.
@@ -345,7 +347,7 @@ func Load() {
 			help = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
-		} else if strings.HasPrefix(kv.key, "oc.") {
+		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
 			usage()
 			os.Exit(1)
@@ -362,6 +364,16 @@ func Load() {
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
 	}
 
+	// Load order: Commandline args -> Yaml files
+	n, err := defaultC.LoadArgs(os.Args[1:])
+	if err != nil {
+		fmt.Printf("[OlayConfig] Load arguments fail, error: %v]\n", err)
+		os.Exit(1)
+	}
+	if !silent {
+		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
+	}
+
 	for _, file := range yamlFiles {
 		err := defaultC.LoadYamlFile(file)
 		if err != nil {
@@ -369,7 +381,7 @@ func Load() {
 			os.Exit(1)
 		}
 		if !silent {
-			fmt.Printf("[OlayConfig] Loaded yaml file %v.\n", file)
+			fmt.Printf("[OlayConfig] Yaml file loaded: %v.\n", file)
 		}
 	}
 }

@@ -14,7 +14,7 @@ foo:
 `)
 
 	var c = New()
-	err := c.LoadYamlBytes(testdata)
+	err := c.LoadYaml(testdata)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ foo:
   onoff: True
 `)
 	var c = New()
-	err := c.LoadYamlBytes(testdata)
+	err := c.LoadYaml(testdata)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,11 +103,11 @@ foo:
 `)
 
 	var c = New()
-	err := c.LoadYamlBytes(testdata1)
+	err := c.LoadYaml(testdata1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.LoadYamlBytes(testdata2)
+	err = c.LoadYaml(testdata2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +169,7 @@ foo:
 	}
 
 	var c = New()
-	err := c.LoadYamlBytes(testdata)
+	err := c.LoadYaml(testdata)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +199,7 @@ foo:
 	var expect = testConfig{Id: 123, Name: "foo1"}
 
 	var c = New()
-	err := c.LoadYamlBytes(testdata)
+	err := c.LoadYaml(testdata)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,7 +222,7 @@ func TestConfigLoadKVs(t *testing.T) {
 		{"foo.pi", 3.1415926},
 		{"foo.onoff", true},
 	}
-	err := c.LoadFromKVs(kvs)
+	_, err := c.LoadKVs(kvs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -277,7 +277,7 @@ func TestConfigLoadArgs(t *testing.T) {
 		"-foo.pi=3.1415926",
 		"-foo.onoff",
 	}
-	err := c.LoadFromArgs(args)
+	_, err := c.LoadArgs(args)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -337,11 +337,11 @@ foo:
 `)
 
 	var c = New()
-	err := c.LoadFromArgs(args)
+	_, err := c.LoadArgs(args)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.LoadYamlBytes(testyaml)
+	err = c.LoadYaml(testyaml)
 	if err != nil {
 		t.Fatal(err)
 	}

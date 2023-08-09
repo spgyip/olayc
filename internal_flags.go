@@ -6,6 +6,10 @@ type internalFlag struct {
 	help  string
 }
 
+const (
+	internalFlagPrefix = "oc."
+)
+
 func (fl internalFlag) is(key string) bool {
 	if key == fl.full || key == fl.short {
 		return true
