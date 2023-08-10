@@ -19,7 +19,7 @@ Use `-of.f.y=...` to add yaml file.
              -oc.f.y=./testdata/test2.yaml
 ```
 
-> The left yaml file is more prior to right file, thus, if there are same keys in `test1.yaml` and `test2.yaml`, the value in `test1.yaml` will be got.
+> The left yaml file is prior to right file, thus, if there are same keys in `test1.yaml` and `test2.yaml`, the value in `test1.yaml` will be got.
 
 ## Load from commandline arguments
 
@@ -33,8 +33,6 @@ Use commandline argument seperated by `.`.
 ```
 
 > Commandline arguments is prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
-
-## File required
 
 ## Silent mode
 
