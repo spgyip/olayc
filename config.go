@@ -243,7 +243,7 @@ func Load(opts ...loadOptionFunc) {
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
 		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
-			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
+			fmt.Printf("[OlayConfig][Error] Unknown oc flag: %v\n", kv.key)
 			usage()
 			os.Exit(1)
 		}
@@ -267,7 +267,7 @@ func Load(opts ...loadOptionFunc) {
 			}
 		}
 		if !ok {
-			fmt.Printf("[OlayConfig] File %v is required.\n", fr)
+			fmt.Printf("[OlayConfig][Error] File %v is required.\n", fr)
 			fileCheck = false
 		}
 	}
@@ -286,7 +286,7 @@ func Load(opts ...loadOptionFunc) {
 	//  - Yaml/Json files
 	n, err := defaultC.LoadArgs(os.Args[1:])
 	if err != nil {
-		fmt.Printf("[OlayConfig] Load arguments fail, error: %v]\n", err)
+		fmt.Printf("[OlayConfig][Error] Load arguments fail, error: %v]\n", err)
 		os.Exit(1)
 	}
 	if !silent {
@@ -296,7 +296,7 @@ func Load(opts ...loadOptionFunc) {
 	for _, file := range yamlFiles {
 		err := defaultC.LoadYamlFile(file)
 		if err != nil {
-			fmt.Printf("[OlayConfig] Load fail, error: %v\n", err)
+			fmt.Printf("[OlayConfig][Error] Load fail, error: %v\n", err)
 			os.Exit(1)
 		}
 		if !silent {
