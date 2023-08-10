@@ -12,6 +12,8 @@ See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
 ## Load yaml files
 
+Use `-of.f.y=...` to add yaml file.
+
 ```
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
@@ -21,6 +23,8 @@ See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
 ## Load from commandline arguments
 
+Use commandline argument seperated by `.`.
+
 ```
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
@@ -28,7 +32,7 @@ See `examples/`. Build with `make all`, binaries are built in `bin/`.
              -foo.name=hello
 ```
 
-> Commandline arguments is more prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
+> Commandline arguments is prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
 
 ## File required
 
@@ -63,7 +67,7 @@ olayc.Load(
 )
 ```
 
-## Scalar value
+## Get scalar value
 
 ```go
 olayc.Load()
@@ -72,7 +76,7 @@ name: = olayc.String("foo.name", "foo")
 url := olayc.String("foo.url", "http://www.default.com"))
 ```
 
-## Unmarshal
+## Unmarshal to struct
 
 Unmarshal is using yaml field tags.
 
@@ -99,6 +103,22 @@ The default olayc has default priority when multiple configure sources are loade
 - Yaml/Json Files, left prior
 
 > In fact, the source has more priority is placed on upper layer.
+
+# Internal olayc flags
+
+There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` to see help message.
+
+```
+Usage of olayc:
+  oc.help | oc.h
+         Print this help message.
+  oc.silent | oc.s
+         Set silent mode, default is false.
+  oc.file.yaml | oc.f.y
+         Load yaml file.
+  oc.file.json | oc.f.j
+         Load json file.
+```
 
 # Tests
 
