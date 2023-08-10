@@ -18,7 +18,10 @@ type config struct {
 func main() {
 	var cfg config
 
-	olayc.Load()
+	olayc.Load(
+		olayc.WithFileRequire("test1.yaml"),
+		olayc.WithFileRequire("test2.yaml"),
+	)
 	err := olayc.Unmarshal(olayc.Root, &cfg)
 	if err != nil {
 		fmt.Println(err)

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// Root value
+	// Root key
 	Root = ""
 )
 
@@ -20,6 +20,17 @@ func usage() {
 	for _, fn := range internalFlags {
 		fmt.Printf("  %v | %v\n", fn.full, fn.short)
 		fmt.Printf("         %v\n", fn.help)
+	}
+}
+
+type loadOptionFunc func(*loadOptions)
+type loadOptions struct {
+	filesRequired []string
+}
+
+func WithFileRequire(name string) loadOptionFunc {
+	return func(opt *loadOptions) {
+		opt.filesRequired = append(opt.filesRequired, name)
 	}
 }
 
@@ -99,11 +110,13 @@ func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
 // Get value with the given key, return nil if doesn't exist.
 // The key is splitted by seperator '.', e.g. 'foo.name'.
 // The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
+// Use `Root` key to get the whole configure.
 // Return nil if it doesn't exist.
-func (c *OlayConfig) Get(key string) Value {
+// TODO: How if the value is set to nil, should tell the difference between not-exist and nil value?
+func (c *OlayConfig) Get(key string) *Value {
 	var cur any = c.merged
 	if key == Root {
-		return cur
+		return &Value{v: cur}
 	}
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
@@ -118,205 +131,82 @@ func (c *OlayConfig) Get(key string) Value {
 			break
 		}
 	}
-	return cur
+	if cur == nil {
+		return nil
+	}
+	return &Value{v: cur}
 }
 
-// Get string value, return defaultValue if it doesn't exist.
+// Get string value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) String(key string, defaultValue string) string {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var s = defaultValue
-	switch x := v.(type) {
-	case string:
-		s = x
-	case int, int8, int16, int32, int64,
-		uint, uint8, uint16, uint32, uint64,
-		float32, float64,
-		bool:
-		s = fmt.Sprintf("%v", x)
-	}
-	return s
+	return v.String()
 }
 
-// Get int value, return defaultValue if it doesn't exist.
+// Get int value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Int(key string, defaultValue int) int {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i int
-	switch x := v.(type) {
-	case int:
-		i = int(x)
-	case int8:
-		i = int(x)
-	case int16:
-		i = int(x)
-	case int32:
-		i = int(x)
-	case int64:
-		i = int(x)
-	case uint:
-		i = int(x)
-	case uint8:
-		i = int(x)
-	case uint16:
-		i = int(x)
-	case uint32:
-		i = int(x)
-	case uint64:
-		i = int(x)
-	default:
-		return defaultValue
-	}
-	return i
+	return v.Int()
 }
 
-// Get uint value, return defaultValue if it doesn't exist.
+// Get uint value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Uint(key string, defaultValue uint) uint {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i = defaultValue
-	switch x := v.(type) {
-	case int:
-		i = uint(x)
-	case int8:
-		i = uint(x)
-	case int16:
-		i = uint(x)
-	case int32:
-		i = uint(x)
-	case int64:
-		i = uint(x)
-	case uint:
-		i = uint(x)
-	case uint8:
-		i = uint(x)
-	case uint16:
-		i = uint(x)
-	case uint32:
-		i = uint(x)
-	case uint64:
-		i = uint(x)
-	}
-	return i
+	return v.Uint()
 }
 
-// Get int64 value, return defaultValue if it doesn't exist.
+// Get int64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Int64(key string, defaultValue int64) int64 {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i = defaultValue
-	switch x := v.(type) {
-	case int:
-		i = int64(x)
-	case int8:
-		i = int64(x)
-	case int16:
-		i = int64(x)
-	case int32:
-		i = int64(x)
-	case int64:
-		i = int64(x)
-	case uint:
-		i = int64(x)
-	case uint8:
-		i = int64(x)
-	case uint16:
-		i = int64(x)
-	case uint32:
-		i = int64(x)
-	case uint64:
-		i = int64(x)
-	}
-	return i
+	return v.Int64()
 }
 
-// Get uint64 value, return defaultValue if it doesn't exist.
+// Get uint64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Uint64(key string, defaultValue uint64) uint64 {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i = defaultValue
-	switch x := v.(type) {
-	case int:
-		i = uint64(x)
-	case int8:
-		i = uint64(x)
-	case int16:
-		i = uint64(x)
-	case int32:
-		i = uint64(x)
-	case int64:
-		i = uint64(x)
-	case uint:
-		i = uint64(x)
-	case uint8:
-		i = uint64(x)
-	case uint16:
-		i = uint64(x)
-	case uint32:
-		i = uint64(x)
-	case uint64:
-		i = uint64(x)
-	}
-	return i
+	return v.Uint64()
 }
 
-// Get float64 value, return defaultValue if it doesn't exist.
+// Get float64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Float64(key string, defaultValue float64) float64 {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i = defaultValue
-	switch x := v.(type) {
-	case float32:
-		i = float64(x)
-	case float64:
-		i = float64(x)
-	}
-	return i
+	return v.Float64()
 }
 
-// Get bool value, return defaultValue if it doesn't exist.
+// Get bool value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Bool(key string, defaultValue bool) bool {
 	v := c.Get(key)
 	if v == nil {
 		return defaultValue
 	}
-
-	var i = defaultValue
-	switch x := v.(type) {
-	case bool:
-		i = bool(x)
-	}
-	return i
+	return v.Bool()
 }
 
-// Unmarshal is implemented by using yaml utility,
-// value is firstly marshalled to yaml bytes,
-// then the yaml bytes is unmarshal to target out.
-// Thus, if 'out' is a struct, you must use the yaml struct tag.
+// Unmarshal out, return error if it doesn't exist.
 func (c *OlayConfig) Unmarshal(key string, out any) error {
 	v := c.Get(key)
 	if v == nil {
-		return errors.New("key doesn't exist")
+		return errors.Errorf("key doesn't exists: %v", key)
 	}
-	return UnmarshalValue(v, out)
+	return v.Unmarshal(out)
 }
 
 // `defaultC` is the default OlayConfig.
@@ -329,10 +219,15 @@ var defaultC = New()
 // - Json files, e.g. `-oc.f.j=foo.json`
 //
 // If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
-func Load() {
+func Load(opts ...loadOptionFunc) {
 	var yamlFiles []string
 	var help = false
 	var silent = false
+
+	var opt loadOptions
+	for _, of := range opts {
+		of(&opt)
+	}
 
 	fp := &flagParser{}
 	fp.parse(os.Args[1:])
@@ -348,7 +243,7 @@ func Load() {
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			yamlFiles = append(yamlFiles, kv.value.(string))
 		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
-			fmt.Printf("[OlayConfig] Unknown oc flag: %v\n", kv.key)
+			fmt.Printf("[OlayConfig][Error] Unknown oc flag: %v\n", kv.key)
 			usage()
 			os.Exit(1)
 		}
@@ -359,15 +254,39 @@ func Load() {
 		os.Exit(0)
 	}
 
+	// Check required files
+	var fileCheck = true
+	for _, fr := range opt.filesRequired {
+		var ok = false
+		for _, fy := range yamlFiles {
+			// Check if fy has suffix of fr.
+			n := len(fy) - len(fr)
+			if n >= 0 && fy[n:] == fr {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			fmt.Printf("[OlayConfig][Error] File %v is required.\n", fr)
+			fileCheck = false
+		}
+	}
+	if !fileCheck {
+		fmt.Println("[OlayConfig] Use '-oc.f.(y|j)=....'")
+		os.Exit(1)
+	}
+
 	if !silent {
 		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
 	}
 
-	// Load order: Commandline args -> Yaml files
+	// Priority
+	//  - Commandline arguments
+	//  - Yaml/Json files
 	n, err := defaultC.LoadArgs(os.Args[1:])
 	if err != nil {
-		fmt.Printf("[OlayConfig] Load arguments fail, error: %v]\n", err)
+		fmt.Printf("[OlayConfig][Error] Load arguments fail, error: %v]\n", err)
 		os.Exit(1)
 	}
 	if !silent {
@@ -377,7 +296,7 @@ func Load() {
 	for _, file := range yamlFiles {
 		err := defaultC.LoadYamlFile(file)
 		if err != nil {
-			fmt.Printf("[OlayConfig] Load fail, error: %v\n", err)
+			fmt.Printf("[OlayConfig][Error] Load fail, error: %v\n", err)
 			os.Exit(1)
 		}
 		if !silent {
@@ -386,47 +305,47 @@ func Load() {
 	}
 }
 
-// Get value with default OlaycConfig .
-func Get(key string) Value {
+// Get value with default OlaycConfig.
+func Get(key string) *Value {
 	return defaultC.Get(key)
 }
 
-// Get string with default OlayConfig
+// Get string with default OlayConfig.
 func String(key string, defaultValue string) string {
 	return defaultC.String(key, defaultValue)
 }
 
-// Get int with default OlayConfig
+// Get int with default OlayConfig.
 func Int(key string, defaultValue int) int {
 	return defaultC.Int(key, defaultValue)
 }
 
-// Get uint with default OlayConfig
+// Get uint with default OlayConfig.
 func Uint(key string, defaultValue uint) uint {
 	return defaultC.Uint(key, defaultValue)
 }
 
-// Get int64 with default OlayConfig
+// Get int64 with default OlayConfig.
 func Int64(key string, defaultValue int64) int64 {
 	return defaultC.Int64(key, defaultValue)
 }
 
-// Get uint64 with default OlayConfig
+// Get uint64 with default OlayConfig.
 func Uint64(key string, defaultValue uint64) uint64 {
 	return defaultC.Uint64(key, defaultValue)
 }
 
-// Get float64 with default OlayConfig
+// Get float64 with default OlayConfig.
 func Float64(key string, defaultValue float64) float64 {
 	return defaultC.Float64(key, defaultValue)
 }
 
-// Get bool with default OlayConfig
+// Get bool with default OlayConfig.
 func Bool(key string, defaultValue bool) bool {
 	return defaultC.Bool(key, defaultValue)
 }
 
-// Unmarshal with default OlayConfig
+// Unmarshal with default OlayConfig.
 func Unmarshal(key string, out any) error {
 	return defaultC.Unmarshal(key, out)
 }
