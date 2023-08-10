@@ -94,13 +94,11 @@ olayc.Unmarshal(olayc.Root, &cfg)
 
 # Priority
 
-The default olayc has default priority when multiple configure sources are loaded:
+The default olayc has default priority when multiple configure sources are loaded, which are:
 
 - Commandline arguments, left prior
 - Environment variables
 - Yaml/Json Files, left prior
-
-> In fact, the source has more priority is placed on upper layer.
 
 # Internal olayc flags
 
