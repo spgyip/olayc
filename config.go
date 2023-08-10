@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// Root value
+	// Root key
 	Root = ""
 )
 
@@ -20,6 +20,17 @@ func usage() {
 	for _, fn := range internalFlags {
 		fmt.Printf("  %v | %v\n", fn.full, fn.short)
 		fmt.Printf("         %v\n", fn.help)
+	}
+}
+
+type loadOptionFunc func(*loadOptions)
+type loadOptions struct {
+	filesRequired []string
+}
+
+func WithFileRequire(name string) loadOptionFunc {
+	return func(opt *loadOptions) {
+		opt.filesRequired = append(opt.filesRequired, name)
 	}
 }
 
@@ -99,7 +110,9 @@ func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
 // Get value with the given key, return nil if doesn't exist.
 // The key is splitted by seperator '.', e.g. 'foo.name'.
 // The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
+// Use `Root` key to get the whole configure.
 // Return nil if it doesn't exist.
+// TODO: How if the value is set to nil, should tell the difference between not-exist and nil value?
 func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
 	if key == Root {
@@ -329,10 +342,15 @@ var defaultC = New()
 // - Json files, e.g. `-oc.f.j=foo.json`
 //
 // If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
-func Load() {
+func Load(opts ...loadOptionFunc) {
 	var yamlFiles []string
 	var help = false
 	var silent = false
+
+	var opt loadOptions
+	for _, of := range opts {
+		of(&opt)
+	}
 
 	fp := &flagParser{}
 	fp.parse(os.Args[1:])
@@ -359,12 +377,36 @@ func Load() {
 		os.Exit(0)
 	}
 
+	// Check required files
+	var fileCheck = true
+	for _, fr := range opt.filesRequired {
+		var ok = false
+		for _, fy := range yamlFiles {
+			// Check if fy has suffix of fr.
+			n := len(fy) - len(fr)
+			if n >= 0 && fy[n:] == fr {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			fmt.Printf("[OlayConfig] File %v is required.\n", fr)
+			fileCheck = false
+		}
+	}
+	if !fileCheck {
+		fmt.Println("[OlayConfig] Use '-oc.f.(y|j)=....'")
+		os.Exit(1)
+	}
+
 	if !silent {
 		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
 	}
 
-	// Load order: Commandline args -> Yaml files
+	// Priority
+	//  - Commandline arguments
+	//  - Yaml/Json files
 	n, err := defaultC.LoadArgs(os.Args[1:])
 	if err != nil {
 		fmt.Printf("[OlayConfig] Load arguments fail, error: %v]\n", err)

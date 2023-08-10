@@ -30,6 +30,8 @@ See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
 > Commandline arguments is more prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
 
+## File required
+
 ## Silent mode
 
 There are default verbose logs, silent mode can be turned on with `-oc.s`:
@@ -44,7 +46,24 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 # Usage
 
-## Single value
+## Load
+
+It's easy to initialize the default olayc with `Load()`.
+
+```go
+olayc.Load()
+```
+
+It's very common there are configure files must be loaded before program startup. 
+Use `WithFileRequire()` on `Load()`, program will terminates if the required file is not loaded.
+
+```
+olayc.Load(
+    olayc.WithFileRequire("test1.yaml"),
+)
+```
+
+## Scalar value
 
 ```go
 olayc.Load()
