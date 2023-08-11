@@ -1,8 +1,32 @@
 Overlay configuration
 ===================================
 
-Overlay configuration is composition of multiple configure sources, each source is overlayed from bottom to top.
-The top layer is visible if there is key conflicted among layers.
+Configurations are most common scenerio for controlling program behavior at runtime. There are different ways of configuration, e.g. from configure files, commandline arguments, environment variables. Overlay configuration is composition of multiple configure sources, and provides a unified interface to load from different configure sources. 
+
+```
+                                [### Configure sources ###]
+
+                                -------------------------
+                       --------- | commandline arguments |
+                       |         -------------------------
+    ---------------    |         --------------
+    |    olayc    | <----------- | Yaml files |
+    ---------------    |         --------------
+                       |         --------------
+                       --------- |    ENVs    |
+                                 --------------
+```
+
+Currently supported configure sources:
+- [X] Commandline argument
+- [X] Yaml file
+- [ ] Json file
+- [ ] Environment
+- [ ] Etcd
+
+# Overlay
+
+Every configure sources are overlayed from bottom to top, the upper layer has more priority than the lower ones, which means if there are keys conflited the value in the upper layer will be got.
 
 ![layers](readme/images/layers.png)
 

@@ -5,12 +5,12 @@ import (
 	"testing"
 )
 
-// TODO: Add tests for success Get.
-func TestConfigGetValueNotExisit(t *testing.T) {
+func TestConfigGetValue(t *testing.T) {
 	var testdata = []byte(`
 foo:
   name: foo1
   id: 123
+  pi: 3.1415926
 `)
 
 	var c = New()
@@ -20,15 +20,18 @@ foo:
 	}
 
 	for i, test := range []struct {
-		key string
+		key    string
+		expect any
 	}{
-		{"fooa"},
-		{"foo.namea"},
-		{"foo.name.a"},
+		{"foo-not-exisit", Value{v: nil}},
+		{"foo.name-not-exisit", Value{v: nil}},
+		{"foo.name.not-exisit", Value{v: nil}},
+		{"foo.name", Value{string("foo1")}},
+		{"foo.id", Value{int(123)}},
 	} {
 		got := c.Get(test.key)
-		if got != nil {
-			t.Errorf("[%v] got not nil(%v), expect nil\n", i, got)
+		if got != test.expect {
+			t.Errorf("[%v] got(%v)!=expect(%v)\n", i, got, test.expect)
 		}
 	}
 }
@@ -323,17 +326,88 @@ func TestConfigLoadArgs(t *testing.T) {
 	}
 }
 
-func TestConfigLoadYamlArgsOverlay(t *testing.T) {
+func TestConfigLoadJson(t *testing.T) {
+	var testdata = []byte(`
+{
+  "foo": {
+	"name": "test-foo",
+    "id": 123,
+    "pi": 3.1415926,
+    "temp": -50,
+    "onoff": true
+  }
+}
+`)
+	var c = New()
+	err := c.LoadJson(testdata)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, test := range []struct {
+		key          string
+		defaultValue any
+		knd          reflect.Kind
+		expect       any
+	}{
+		{"foo.name", "", reflect.String, "test-foo"},
+		{"foo.name.not-exist", "default-name", reflect.String, "default-name"},
+		{"foo.id", int(0), reflect.Int, int(123)},
+		{"foo.id", uint(0), reflect.Uint, uint(123)},
+		{"foo.id", int64(0), reflect.Int64, int64(123)},
+		{"foo.id", uint64(0), reflect.Uint64, uint64(123)},
+		{"foo.temp", int(0), reflect.Int, int(-50)},
+		{"foo.temp", int64(0), reflect.Int64, int64(-50)},
+		{"foo.pi", float64(0), reflect.Float64, float64(3.1415926)},
+		{"foo.onoff", bool(false), reflect.Bool, bool(true)},
+	} {
+		var got any
+		switch test.knd {
+		case reflect.String:
+			got = c.String(test.key, test.defaultValue.(string))
+		case reflect.Int:
+			got = c.Int(test.key, test.defaultValue.(int))
+		case reflect.Uint:
+			got = c.Uint(test.key, test.defaultValue.(uint))
+		case reflect.Int64:
+			got = c.Int64(test.key, test.defaultValue.(int64))
+		case reflect.Uint64:
+			got = c.Uint64(test.key, test.defaultValue.(uint64))
+		case reflect.Float64:
+			got = c.Float64(test.key, test.defaultValue.(float64))
+		case reflect.Bool:
+			got = c.Bool(test.key, test.defaultValue.(bool))
+		}
+
+		if got != test.expect {
+			t.Errorf("[%v] got(\"%v\")!=expect(\"%v\")\n", i, got, test.expect)
+		}
+	}
+}
+
+func TestConfigOverlay(t *testing.T) {
 	var args = []string{
-		"-foo.name", "foo1",
+		"-foo.name", "foo-args",
 		"-foo.id=123",
 	}
 	var testyaml = []byte(`
 foo:
-  name: foo-bad
+  name: foo-yaml
   redis:
     host: redis.cluster
     port: 6380
+`)
+	var testjson = []byte(`
+{
+  "foo": {
+    "name": "foo-json",
+    "id": 456,
+    "redis": {
+      "host": "redis.cluster1",
+      "timeout": 3
+	}
+  }
+}
 `)
 
 	var c = New()
@@ -345,6 +419,10 @@ foo:
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = c.LoadJson(testjson)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for i, test := range []struct {
 		key          string
@@ -352,10 +430,11 @@ foo:
 		knd          reflect.Kind
 		expect       any
 	}{
-		{"foo.name", "", reflect.String, "foo1"},
+		{"foo.name", "", reflect.String, "foo-args"},
 		{"foo.id", int(0), reflect.Int, int(123)},
 		{"foo.redis.host", "", reflect.String, "redis.cluster"},
 		{"foo.redis.port", int(0), reflect.Int, int(6380)},
+		{"foo.redis.timeout", int(0), reflect.Int, int(3)},
 	} {
 		var got any
 		switch test.knd {

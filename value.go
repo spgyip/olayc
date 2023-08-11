@@ -12,6 +12,11 @@ type Value struct {
 	v any
 }
 
+// Return if it's nil value
+func (v *Value) IsNil() bool {
+	return v.v == nil
+}
+
 // Get string value, return "" if it doesn't exist.
 func (v *Value) String() string {
 	if v.v == nil {
