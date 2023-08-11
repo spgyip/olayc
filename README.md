@@ -167,16 +167,16 @@ There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` t
 
 ```
 Usage of olayc:
-  oc.help | oc.h
-         Print this help message.
-  oc.silent | oc.s
+  -oc.silent | -oc.s
          Set silent mode, default is false.
-  oc.file.yaml | oc.f.y
+  -oc.file.yaml | -oc.f.y
          Load yaml file.
-  oc.file.json | oc.f.j
+  -oc.file.json | -oc.f.j
          Load json file.
-  oc.dryrun | oc.dr
+  -oc.dryrun | -oc.dr
          Dry run, load and print Yaml then exit.
+  -oc.help | -oc.h
+         Print this help message.
 ```
 
 # Tests

@@ -19,7 +19,7 @@ const (
 func usage() {
 	fmt.Println("Usage of olayc:")
 	for _, fn := range internalFlags {
-		fmt.Printf("  %v | %v\n", fn.full, fn.short)
+		fmt.Printf("  -%v | -%v\n", fn.full, fn.short)
 		fmt.Printf("         %v\n", fn.help)
 	}
 }
