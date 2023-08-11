@@ -83,10 +83,11 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 ## Dry run mode
 
-Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged configurations with yaml format then exit the program. It's convenient for pre-check.
+Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged configurations with yaml format then exits the program. It's convenient for pre-checking.
 
 ```go
-./bin/simple -oc.s \
+./bin/simple -oc.dr \
+             -oc.s \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
              -foo.id=999 \
