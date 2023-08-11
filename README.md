@@ -52,7 +52,7 @@ Use `-of.f.j=...` to add json file.
 ```
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
-             -oc.f.j=./testdata/test1.yaml
+             -oc.f.j=./testdata/test1.json
 ```
 
 ## Load from commandline arguments
@@ -62,7 +62,7 @@ Use commandline argument seperated by `.`.
 ```
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
-             -oc.f.j=./testdata/test1.yaml
+             -oc.f.j=./testdata/test1.json
              -foo.redis.host=redis.othercluster \
              -foo.redis.port=999
 ```
@@ -76,9 +76,10 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 ```go
 ./bin/simple -oc.s \
              -oc.f.y=./testdata/test1.yaml \
-             -oc.f.y=./testdata/test2.yaml
-             -foo.id=999 \
-             -foo.name=hello
+             -oc.f.y=./testdata/test2.yaml \
+             -oc.f.j=./testdata/test1.json \
+             -foo.redis.host=redis.othercluster \
+             -foo.redis.port=999
 ```
 
 ## Dry run mode
@@ -89,9 +90,10 @@ Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged conf
 ./bin/simple -oc.dr \
              -oc.s \
              -oc.f.y=./testdata/test1.yaml \
-             -oc.f.y=./testdata/test2.yaml
-             -foo.id=999 \
-             -foo.name=hello
+             -oc.f.y=./testdata/test2.yaml \
+             -oc.f.j=./testdata/test1.json \
+             -foo.redis.host=redis.othercluster \
+             -foo.redis.port=999
 
 [OlayConfig] Dry run mode is on, program will exit after yaml printed.
 foo:
@@ -101,10 +103,9 @@ foo:
     zone: sz
   name: foo1
   redis:
-    host: redis.cluster
-    port: 8306
+    host: redis.othercluster
+    port: 999
   url: http://www.example.com
-
 ```
 
 # Usage
