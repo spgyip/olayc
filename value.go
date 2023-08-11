@@ -205,3 +205,8 @@ func (v *Value) Unmarshal(out any) error {
 	}
 	return yaml.Unmarshal(data, out)
 }
+
+// Marshal value to yaml bytes.
+func (v *Value) MarshalToYaml() ([]byte, error) {
+	return yaml.Marshal(v.v)
+}

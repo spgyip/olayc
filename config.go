@@ -238,6 +238,16 @@ func (c *OlayConfig) Unmarshal(key string, out any) error {
 	return v.Unmarshal(out)
 }
 
+// Return Yaml bytes.
+func (c *OlayConfig) ToYaml() (string, error) {
+	v := c.Get(Root)
+	data, err := v.MarshalToYaml()
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 // `defaultC` is the default OlayConfig.
 var defaultC = New()
 
@@ -261,6 +271,7 @@ func Load(opts ...loadOptionFunc) {
 
 	var help = false
 	var silent = false
+	var dryrun = false
 	var files []inputFile
 
 	var opt loadOptions
@@ -279,6 +290,8 @@ func Load(opts ...loadOptionFunc) {
 			}
 		} else if internalFlags["help"].is(kv.key) {
 			help = true
+		} else if internalFlags["dryrun"].is(kv.key) {
+			dryrun = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			files = append(files, inputFile{kv.value.(string), Yaml})
 		} else if internalFlags["file.json"].is(kv.key) {
@@ -298,6 +311,7 @@ func Load(opts ...loadOptionFunc) {
 	if !silent {
 		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
+		fmt.Printf("[OlayConfig] Dry run mode is %v.\n", dryrun)
 	}
 
 	if len(opt.filesRequired) > 0 && !silent {
@@ -357,6 +371,12 @@ func Load(opts ...loadOptionFunc) {
 			fmt.Printf("[OlayConfig] File loaded: %v.\n", f.name)
 		}
 	}
+
+	if dryrun {
+		fmt.Println("[OlayConfig] Dry run mode is on, program will exit after yaml printed.")
+		fmt.Println(defaultC.ToYaml())
+		os.Exit(0)
+	}
 }
 
 // Get value with default OlaycConfig.
@@ -402,4 +422,9 @@ func Bool(key string, defaultValue bool) bool {
 // Unmarshal with default OlayConfig.
 func Unmarshal(key string, out any) error {
 	return defaultC.Unmarshal(key, out)
+}
+
+// ToYaml with default OlayConfig.
+func ToYaml() (string, error) {
+	return defaultC.ToYaml()
 }
