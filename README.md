@@ -1,7 +1,7 @@
 Overlay configuration
 ===================================
 
-Configurations are most common scenerio for controlling program behavior at runtime. There are different ways of configuration, e.g. from configure files, commandline arguments, environment variables. Overlay configuration is composition of multiple configure sources, and provides a unified interface to load from different configure sources. 
+Configurations are very common scenerios controlling program behaviors at runtime. There are different ways of configuration, e.g. from configure files, commandline arguments, environment variables. Overlay configuration is composition of multiple configure sources, and provides a unified interface to load from different configure sources. 
 
 ```
                                 [### Configure sources ###]
@@ -17,12 +17,12 @@ Configurations are most common scenerio for controlling program behavior at runt
                                  --------------
 ```
 
-Currently supported configure sources:
+Currently supported: 
 - [X] Commandline argument
 - [X] Yaml file
-- [ ] Json file
+- [X] Json file
 - [ ] Environment
-- [ ] Etcd
+- [ ] Etcd KV
 
 # Overlay
 

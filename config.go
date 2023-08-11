@@ -249,9 +249,19 @@ var defaultC = New()
 //
 // If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
 func Load(opts ...loadOptionFunc) {
-	var yamlFiles []string
+	type inputFileType int
+	const (
+		Yaml inputFileType = iota
+		Json
+	)
+	type inputFile struct {
+		name string
+		typ  inputFileType
+	}
+
 	var help = false
 	var silent = false
+	var files []inputFile
 
 	var opt loadOptions
 	for _, of := range opts {
@@ -270,7 +280,9 @@ func Load(opts ...loadOptionFunc) {
 		} else if internalFlags["help"].is(kv.key) {
 			help = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
-			yamlFiles = append(yamlFiles, kv.value.(string))
+			files = append(files, inputFile{kv.value.(string), Yaml})
+		} else if internalFlags["file.json"].is(kv.key) {
+			files = append(files, inputFile{kv.value.(string), Json})
 		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			fmt.Printf("[OlayConfig][Error] Unknown oc flag: %v\n", kv.key)
 			usage()
@@ -283,14 +295,26 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(0)
 	}
 
+	if !silent {
+		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
+		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
+	}
+
+	if len(opt.filesRequired) > 0 && !silent {
+		fmt.Println("[OlayConfig] Files required:")
+		for _, name := range opt.filesRequired {
+			fmt.Printf("  - %v\n", name)
+		}
+	}
+
 	// Check required files
 	var fileCheck = true
 	for _, fr := range opt.filesRequired {
 		var ok = false
-		for _, fy := range yamlFiles {
+		for _, fy := range files {
 			// Check if fy has suffix of fr.
-			n := len(fy) - len(fr)
-			if n >= 0 && fy[n:] == fr {
+			n := len(fy.name) - len(fr)
+			if n >= 0 && fy.name[n:] == fr {
 				ok = true
 				break
 			}
@@ -305,11 +329,6 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(1)
 	}
 
-	if !silent {
-		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
-		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
-	}
-
 	// Priority
 	//  - Commandline arguments
 	//  - Yaml/Json files
@@ -322,14 +341,20 @@ func Load(opts ...loadOptionFunc) {
 		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
 	}
 
-	for _, file := range yamlFiles {
-		err := defaultC.LoadYamlFile(file)
+	for _, f := range files {
+		var err error
+		if f.typ == Yaml {
+			err = defaultC.LoadYamlFile(f.name)
+
+		} else if f.typ == Json {
+			err = defaultC.LoadJsonFile(f.name)
+		}
 		if err != nil {
 			fmt.Printf("[OlayConfig][Error] Load fail, error: %v\n", err)
 			os.Exit(1)
 		}
 		if !silent {
-			fmt.Printf("[OlayConfig] Yaml file loaded: %v.\n", file)
+			fmt.Printf("[OlayConfig] File loaded: %v.\n", f.name)
 		}
 	}
 }

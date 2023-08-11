@@ -1,0 +1,10 @@
+{
+  "foo": {
+    "name": "foo3",
+    "id": 456,
+    "redis": {
+      "host": "redis.cluster",
+      "port": 8306
+    }
+  }
+}
