@@ -1,6 +1,7 @@
 package olayc
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -18,7 +19,7 @@ const (
 func usage() {
 	fmt.Println("Usage of olayc:")
 	for _, fn := range internalFlags {
-		fmt.Printf("  %v | %v\n", fn.full, fn.short)
+		fmt.Printf("  -%v | -%v\n", fn.full, fn.short)
 		fmt.Printf("         %v\n", fn.help)
 	}
 }
@@ -48,7 +49,7 @@ func New() *OlayConfig {
 	}
 }
 
-// Load yaml config from file, stack on top layer
+// Load yaml config from file.
 func (c *OlayConfig) LoadYamlFile(filepath string) error {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
@@ -62,9 +63,40 @@ func (c *OlayConfig) LoadYaml(data []byte) error {
 	var m = make(map[any]any)
 	err := yaml.Unmarshal(data, &m)
 	if err != nil {
-		return errors.Wrap(err, "LoadYamlBytes error")
+		return errors.Wrap(err, "LoadYaml error")
 	}
 	copyMap(c.merged, m)
+	return nil
+}
+
+// Load json config from file.
+func (c *OlayConfig) LoadJsonFile(filepath string) error {
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		return errors.Wrap(err, "LoadJsonFile error")
+	}
+	return c.LoadJson(data)
+}
+
+// Load json from bytes.
+// To unmarshal a JSON object into a map using the standard library "encoding/json",
+// the map's key type must either be any string type, an integer.
+// Thus, the unmarshal map type is map[string]any(and all sub-maps), it not compatible with `copyMap()` which is accepting type map[any]any.
+// We must convert `map[string]any` to `map[any]any`, this is simplily done by marshal/unmarshal with "gopkg.in/yaml.v2".
+func (c *OlayConfig) LoadJson(data []byte) error {
+	var m = make(map[string]any)
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return errors.Wrap(err, "LoadJson error")
+	}
+
+	var m1 map[any]any
+	m1, err = convertMap(m)
+	if err != nil {
+		return errors.Wrap(err, "LoadJson error")
+	}
+
+	copyMap(c.merged, m1)
 	return nil
 }
 
@@ -111,12 +143,12 @@ func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
 // The key is splitted by seperator '.', e.g. 'foo.name'.
 // The key is case sensitive, thus, 'foo.Name' is different from 'foo.name'.
 // Use `Root` key to get the whole configure.
-// Return nil if it doesn't exist.
+// If it doesn't exist, 'Value.IsNil()' is true.
 // TODO: How if the value is set to nil, should tell the difference between not-exist and nil value?
-func (c *OlayConfig) Get(key string) *Value {
+func (c *OlayConfig) Get(key string) Value {
 	var cur any = c.merged
 	if key == Root {
-		return &Value{v: cur}
+		return Value{v: cur}
 	}
 	sps := strings.Split(key, ".")
 	for _, sp := range sps {
@@ -131,16 +163,13 @@ func (c *OlayConfig) Get(key string) *Value {
 			break
 		}
 	}
-	if cur == nil {
-		return nil
-	}
-	return &Value{v: cur}
+	return Value{v: cur}
 }
 
 // Get string value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) String(key string, defaultValue string) string {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.String()
@@ -149,7 +178,7 @@ func (c *OlayConfig) String(key string, defaultValue string) string {
 // Get int value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Int(key string, defaultValue int) int {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Int()
@@ -158,7 +187,7 @@ func (c *OlayConfig) Int(key string, defaultValue int) int {
 // Get uint value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Uint(key string, defaultValue uint) uint {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Uint()
@@ -167,7 +196,7 @@ func (c *OlayConfig) Uint(key string, defaultValue uint) uint {
 // Get int64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Int64(key string, defaultValue int64) int64 {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Int64()
@@ -176,7 +205,7 @@ func (c *OlayConfig) Int64(key string, defaultValue int64) int64 {
 // Get uint64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Uint64(key string, defaultValue uint64) uint64 {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Uint64()
@@ -185,7 +214,7 @@ func (c *OlayConfig) Uint64(key string, defaultValue uint64) uint64 {
 // Get float64 value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Float64(key string, defaultValue float64) float64 {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Float64()
@@ -194,7 +223,7 @@ func (c *OlayConfig) Float64(key string, defaultValue float64) float64 {
 // Get bool value, return defaultValue if it doesn't exisit.
 func (c *OlayConfig) Bool(key string, defaultValue bool) bool {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return defaultValue
 	}
 	return v.Bool()
@@ -203,10 +232,20 @@ func (c *OlayConfig) Bool(key string, defaultValue bool) bool {
 // Unmarshal out, return error if it doesn't exist.
 func (c *OlayConfig) Unmarshal(key string, out any) error {
 	v := c.Get(key)
-	if v == nil {
+	if v.IsNil() {
 		return errors.Errorf("key doesn't exists: %v", key)
 	}
 	return v.Unmarshal(out)
+}
+
+// Return Yaml bytes.
+func (c *OlayConfig) ToYaml() (string, error) {
+	v := c.Get(Root)
+	data, err := v.MarshalToYaml()
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 // `defaultC` is the default OlayConfig.
@@ -220,9 +259,20 @@ var defaultC = New()
 //
 // If errors happen, e.g. load file fail, error message will be printed and call os.Exit(1).
 func Load(opts ...loadOptionFunc) {
-	var yamlFiles []string
+	type inputFileType int
+	const (
+		Yaml inputFileType = iota
+		Json
+	)
+	type inputFile struct {
+		name string
+		typ  inputFileType
+	}
+
 	var help = false
 	var silent = false
+	var dryrun = false
+	var files []inputFile
 
 	var opt loadOptions
 	for _, of := range opts {
@@ -240,8 +290,12 @@ func Load(opts ...loadOptionFunc) {
 			}
 		} else if internalFlags["help"].is(kv.key) {
 			help = true
+		} else if internalFlags["dryrun"].is(kv.key) {
+			dryrun = true
 		} else if internalFlags["file.yaml"].is(kv.key) {
-			yamlFiles = append(yamlFiles, kv.value.(string))
+			files = append(files, inputFile{kv.value.(string), Yaml})
+		} else if internalFlags["file.json"].is(kv.key) {
+			files = append(files, inputFile{kv.value.(string), Json})
 		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			fmt.Printf("[OlayConfig][Error] Unknown oc flag: %v\n", kv.key)
 			usage()
@@ -254,14 +308,27 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(0)
 	}
 
+	if !silent {
+		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
+		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
+		fmt.Printf("[OlayConfig] Dry run mode is %v.\n", dryrun)
+	}
+
+	if len(opt.filesRequired) > 0 && !silent {
+		fmt.Println("[OlayConfig] Files required:")
+		for _, name := range opt.filesRequired {
+			fmt.Printf("  - %v\n", name)
+		}
+	}
+
 	// Check required files
 	var fileCheck = true
 	for _, fr := range opt.filesRequired {
 		var ok = false
-		for _, fy := range yamlFiles {
+		for _, fy := range files {
 			// Check if fy has suffix of fr.
-			n := len(fy) - len(fr)
-			if n >= 0 && fy[n:] == fr {
+			n := len(fy.name) - len(fr)
+			if n >= 0 && fy.name[n:] == fr {
 				ok = true
 				break
 			}
@@ -276,11 +343,6 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(1)
 	}
 
-	if !silent {
-		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
-		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
-	}
-
 	// Priority
 	//  - Commandline arguments
 	//  - Yaml/Json files
@@ -293,20 +355,32 @@ func Load(opts ...loadOptionFunc) {
 		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
 	}
 
-	for _, file := range yamlFiles {
-		err := defaultC.LoadYamlFile(file)
+	for _, f := range files {
+		var err error
+		if f.typ == Yaml {
+			err = defaultC.LoadYamlFile(f.name)
+
+		} else if f.typ == Json {
+			err = defaultC.LoadJsonFile(f.name)
+		}
 		if err != nil {
 			fmt.Printf("[OlayConfig][Error] Load fail, error: %v\n", err)
 			os.Exit(1)
 		}
 		if !silent {
-			fmt.Printf("[OlayConfig] Yaml file loaded: %v.\n", file)
+			fmt.Printf("[OlayConfig] File loaded: %v.\n", f.name)
 		}
+	}
+
+	if dryrun {
+		fmt.Println("[OlayConfig] Dry run mode is on, program will exit after yaml printed.")
+		fmt.Println(defaultC.ToYaml())
+		os.Exit(0)
 	}
 }
 
 // Get value with default OlaycConfig.
-func Get(key string) *Value {
+func Get(key string) Value {
 	return defaultC.Get(key)
 }
 
@@ -348,4 +422,9 @@ func Bool(key string, defaultValue bool) bool {
 // Unmarshal with default OlayConfig.
 func Unmarshal(key string, out any) error {
 	return defaultC.Unmarshal(key, out)
+}
+
+// ToYaml with default OlayConfig.
+func ToYaml() (string, error) {
+	return defaultC.ToYaml()
 }

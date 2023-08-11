@@ -12,6 +12,11 @@ type Value struct {
 	v any
 }
 
+// Return if it's nil value
+func (v *Value) IsNil() bool {
+	return v.v == nil
+}
+
 // Get string value, return "" if it doesn't exist.
 func (v *Value) String() string {
 	if v.v == nil {
@@ -199,4 +204,9 @@ func (v *Value) Unmarshal(out any) error {
 		return errors.Wrap(err, "Value.Unmarshal fail")
 	}
 	return yaml.Unmarshal(data, out)
+}
+
+// Marshal value to yaml bytes.
+func (v *Value) MarshalToYaml() ([]byte, error) {
+	return yaml.Marshal(v.v)
 }

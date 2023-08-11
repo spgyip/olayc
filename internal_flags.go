@@ -38,4 +38,9 @@ var internalFlags = map[string]internalFlag{
 		"oc.f.j",
 		"Load json file.",
 	},
+	"dryrun": internalFlag{
+		"oc.dryrun",
+		"oc.dr",
+		"Dry run, load and print Yaml then exit.",
+	},
 }

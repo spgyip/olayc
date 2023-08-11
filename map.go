@@ -1,6 +1,11 @@
 package olayc
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
+)
 
 // Copy map values from src to dst, keep the src value if key is conflicted.
 //
@@ -105,4 +110,20 @@ func copyMapDFS(dst map[any]any, src map[any]any) {
 		}
 		copyMapDFS(nextDst, nextSrc)
 	}
+}
+
+// Convert map[string]any to map[any]any.
+// By using yaml marshal and unmarshal.
+func convertMap(m map[string]any) (map[any]any, error) {
+	data, err := yaml.Marshal(m)
+	if err != nil {
+		return nil, errors.Wrap(err, "Convert map fail")
+	}
+
+	var out = make(map[any]any)
+	err = yaml.Unmarshal(data, &out)
+	if err != nil {
+		return nil, errors.Wrap(err, "Convert map fail")
+	}
+	return out, nil
 }
