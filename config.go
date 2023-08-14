@@ -15,6 +15,12 @@ const (
 	Root = ""
 )
 
+// KV is composition of key and value.
+type KV struct {
+	key   string
+	value any
+}
+
 // Print OlayConfig usage.
 func usage() {
 	fmt.Println("Usage of olayc:")
@@ -24,11 +30,13 @@ func usage() {
 	}
 }
 
+// LoadOptions set options for `Load()`.
 type loadOptionFunc func(*loadOptions)
 type loadOptions struct {
 	filesRequired []string
 }
 
+// WithFileRequire returns a loadOptionFunc appends a required file.
 func WithFileRequire(name string) loadOptionFunc {
 	return func(opt *loadOptions) {
 		opt.filesRequired = append(opt.filesRequired, name)
@@ -100,14 +108,15 @@ func (c *OlayConfig) LoadJson(data []byte) error {
 	return nil
 }
 
-// Load from arguments.
-// Return numbers of kvs loaded.
+// Load from arguments. Return numbers of kvs loaded.
 // The internal olayc flags which prefix with `-oc.|--oc.` are ignored.
+//
+// If there are overlap keys, refer to 'LoadKVs()'.
 func (c *OlayConfig) LoadArgs(args []string) (int, error) {
 	var kvs []KV
-	fp := &flagParser{}
-	fp.parse(args)
-	for _, kv := range fp.kvs {
+	psr := &flagParser{}
+	psr.parse(args)
+	for _, kv := range psr.kvs {
 		if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			continue
 		}
@@ -116,23 +125,48 @@ func (c *OlayConfig) LoadArgs(args []string) (int, error) {
 	return c.LoadKVs(kvs)
 }
 
-// Load from key-value pairs.
-// Return number of kvs loaded.
+// Load from environments. Return numbers of kvs loaded.
+//
+// The key is converted to lower case and the seperator '_' is replaced by '.'.
+// E.g. 'LC_CTYPE=UTF-8', is converted to 'lc.ctype=UTF-8'.
+// The anterior '_' in keys are trimed, e.g. '_P9K_SSH_TTY' is converted to `p9k.ssh.tty`.
+//
+// If there are overlap envs, e.g. 'TERM=tmux' 'TERM_PROGRAM=tmux', refer to 'LoadKVs()'.
+func (c *OlayConfig) LoadEnvs(envs []string) (int, error) {
+	psr := &envParser{}
+	psr.parse(envs)
+	return c.LoadKVs(psr.kvs)
+}
+
+// Load from key-value pairs. Return number of kvs loaded.
+//
+// If there are overlap keys, e.g. key1 'foo.redis=redis.cluster' and key2 'foo.redis.host=redis.cluster'.
+// As seen, key2 contains the key1. If get with key 'foo.redis', only one value will be returned, either of 'redis.cluster' and '{"host": "redis.cluster"}'.
+// The previously loaded key is more prior than the latter ones, so the latter one is ignored.
+// For example, if 'foo.redis' is loaded previously, the return value is 'redis.cluster',
+// or if the 'foo.redis.host' is loaded previously, the return value is '{"host": "redis.cluster"}'.
 func (c *OlayConfig) LoadKVs(kvs []KV) (int, error) {
 	var m = make(map[any]any)
 	for _, kv := range kvs {
 		var cur any = m
 		sps := strings.Split(kv.key, ".")
 		for j, sp := range sps {
-			curM := cur.(map[any]any)
-			if j == len(sps)-1 {
-				curM[sp] = kv.value
-			} else {
-				if _, ok := curM[sp]; !ok {
+			var curM map[any]any
+			var ok bool
+			// Current node is scalar value
+			if curM, ok = cur.(map[any]any); !ok {
+				break
+			}
+
+			// Add subtree or value if empty
+			if _, ok = curM[sp]; !ok {
+				if j == len(sps)-1 {
+					curM[sp] = kv.value
+				} else {
 					curM[sp] = make(map[any]any)
 				}
-				cur = curM[sp]
 			}
+			cur = curM[sp]
 		}
 	}
 	copyMap(c.merged, m)
@@ -343,9 +377,7 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(1)
 	}
 
-	// Priority
-	//  - Commandline arguments
-	//  - Yaml/Json files
+	// Load commandline arguments
 	n, err := defaultC.LoadArgs(os.Args[1:])
 	if err != nil {
 		fmt.Printf("[OlayConfig][Error] Load arguments fail, error: %v]\n", err)
@@ -355,6 +387,19 @@ func Load(opts ...loadOptionFunc) {
 		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
 	}
 
+	// Load ENVs
+	n, err = defaultC.LoadEnvs(os.Environ())
+	if err != nil {
+		if err != nil {
+			fmt.Printf("[OlayConfig][Error] Load environments fail, error: %v]\n", err)
+			os.Exit(1)
+		}
+	}
+	if !silent {
+		fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
+	}
+
+	// Load yaml/json files
 	for _, f := range files {
 		var err error
 		if f.typ == Yaml {
