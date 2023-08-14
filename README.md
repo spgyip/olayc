@@ -38,7 +38,7 @@ See `examples/`. Build with `make all`, binaries are built in `bin/`.
 
 Use `-of.f.y=...` to add yaml file.
 
-```
+```shell
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
 ```
@@ -49,7 +49,7 @@ Use `-of.f.y=...` to add yaml file.
 
 Use `-of.f.j=...` to add json file.
 
-```
+```shell
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
              -oc.f.j=./testdata/test1.json
@@ -59,7 +59,7 @@ Use `-of.f.j=...` to add json file.
 
 Use commandline argument seperated by `.`.
 
-```
+```shell
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
              -oc.f.j=./testdata/test1.json
@@ -69,9 +69,9 @@ Use commandline argument seperated by `.`.
 
 ## Load from environment variables
 
-It's not loading from environment variables on default, it can be turn with `-oc.env | -oc.e`. The environment format "FOO\_NAME" is converted to "foo.name".
+Environment variables are not loaded on default, can be turned on with `-oc.env | -oc.e`. The environment format "FOO\_NAME" is converted to "foo.name".
 
-```
+```shell
 FOO_NAME=foo-env ./bin/simple -oc.e \
                               -oc.f.y=./testdata/test1.yaml \
                               -oc.f.y=./testdata/test2.yaml \
@@ -80,13 +80,11 @@ FOO_NAME=foo-env ./bin/simple -oc.e \
                               -foo.redis.port=999
 ```
 
-> Commandline arguments is prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
-
 ## Silent mode
 
 There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
-```go
+```shell
 ./bin/simple -oc.s \
              -oc.e \
              -oc.f.y=./testdata/test1.yaml \
@@ -98,9 +96,9 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 ## Dry run mode
 
-Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged configurations with yaml format then exits the program. It's convenient for pre-checking.
+Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged configurations with yaml format then exits the program. It's convenient for pre-checking what configurations are loaded.
 
-```go
+```shell
 ./bin/simple -oc.dr \
              -oc.s \
              -oc.e \
@@ -136,7 +134,7 @@ olayc.Load()
 It's very common there are configure files must be loaded before program startup. 
 Use `WithFileRequire()` on `Load()`, program will terminates if the required file is not loaded.
 
-```
+```go
 olayc.Load(
     olayc.WithFileRequire("test1.yaml"),
 )
@@ -156,7 +154,6 @@ url := olayc.String("foo.url", "http://www.default.com"))
 Unmarshal is using yaml field tags.
 
 ```go
-
 var cfg struct {
 	Foo struct {
 		Id   int    `yaml:'id'`
@@ -181,7 +178,7 @@ The default olayc has default priority when multiple configure sources are loade
 
 There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` to see help message.
 
-```
+```shell
 Usage of olayc:
   -oc.unenv | -oc.ue
          Don't load from environments.
@@ -211,16 +208,16 @@ FOO_REDIS=cluster1
 FOO_REDIS_NAME=cluster2
 ```
 
-Get with the key `foo.redis`, there is only one value can be got. This depends on the ordering of arguments loaded. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
+There is only one value can be got when get with key 'foo.redis'. This depends on the order of loading. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
 
-If the "-foo.redis=cluster1" is loaded previously, the "-foo.redis.name=cluster2" will be ignored. This will be resulting to:
+If the "-foo.redis=cluster1" is loaded previously, the "-foo.redis.name=cluster2" will be ignored. This is resulting to:
 
 ```go
 Get("foo.redis")         => "cluster1"
 Get("foo.redis.name")    => nil(NOT EXIST)
 ```
 
-If the "-foo.redis.name=cluster2" is loaded previously, the "-foo.redis=cluster1" will be ignored. This will be resulting to:
+If the "-foo.redis.name=cluster2" is loaded previously, the "-foo.redis=cluster1" will be ignored. This is resulting to:
 
 ```go
 Get("foo.redis")         => {"name": "cluster2"}
