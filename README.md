@@ -180,10 +180,6 @@ There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` t
 
 ```shell
 Usage of olayc:
-  -oc.unenv | -oc.ue
-         Don't load from environments.
-  -oc.dryrun | -oc.dr
-         Dry run, load and print Yaml then exit.
   -oc.help | -oc.h
          Print this help message.
   -oc.silent | -oc.s
@@ -192,6 +188,10 @@ Usage of olayc:
          Load yaml file.
   -oc.file.json | -oc.f.j
          Load json file.
+  -oc.env | -oc.e
+         Load from environments.
+  -oc.dryrun | -oc.dr
+         Dry run, load and print Yaml then exit.
 ```
 
 # Overlap keys
