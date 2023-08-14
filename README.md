@@ -18,10 +18,10 @@ Configurations are very common scenerios controlling program behaviors at runtim
 ```
 
 Currently supported: 
-- [X] Commandline argument
+- [X] Commandline arguments
 - [X] Yaml file
 - [X] Json file
-- [ ] Environment
+- [X] Environments
 - [ ] Etcd KV
 
 # Overlay
@@ -67,6 +67,19 @@ Use commandline argument seperated by `.`.
              -foo.redis.port=999
 ```
 
+## Load from environment variables
+
+It's not loading from environment variables on default, it can be turn with `-oc.env | -oc.e`. The environment format "FOO\_NAME" is converted to "foo.name".
+
+```
+FOO_NAME=foo-env ./bin/simple -oc.e \
+                              -oc.f.y=./testdata/test1.yaml \
+                              -oc.f.y=./testdata/test2.yaml \
+                              -oc.f.j=./testdata/test1.json
+                              -foo.redis.host=redis.othercluster \
+                              -foo.redis.port=999
+```
+
 > Commandline arguments is prior to yaml files, thus, `foo.id` will be got with value `999` which is from commandline argument.
 
 ## Silent mode
@@ -75,6 +88,7 @@ There are default verbose logs, silent mode can be turned on with `-oc.s`:
 
 ```go
 ./bin/simple -oc.s \
+             -oc.e \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
              -oc.f.j=./testdata/test1.json \
@@ -89,6 +103,7 @@ Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged conf
 ```go
 ./bin/simple -oc.dr \
              -oc.s \
+             -oc.e \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
              -oc.f.j=./testdata/test1.json \
@@ -158,9 +173,9 @@ olayc.Unmarshal(olayc.Root, &cfg)
 
 The default olayc has default priority when multiple configure sources are loaded, which are:
 
-- Commandline arguments, left prior
+- Commandline arguments
 - Environment variables
-- Yaml/Json Files, left prior
+- Yaml/Json Files
 
 # Internal olayc flags
 
@@ -168,17 +183,51 @@ There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` t
 
 ```
 Usage of olayc:
+  -oc.unenv | -oc.ue
+         Don't load from environments.
+  -oc.dryrun | -oc.dr
+         Dry run, load and print Yaml then exit.
+  -oc.help | -oc.h
+         Print this help message.
   -oc.silent | -oc.s
          Set silent mode, default is false.
   -oc.file.yaml | -oc.f.y
          Load yaml file.
   -oc.file.json | -oc.f.j
          Load json file.
-  -oc.dryrun | -oc.dr
-         Dry run, load and print Yaml then exit.
-  -oc.help | -oc.h
-         Print this help message.
 ```
+
+# Overlap keys
+
+When use commandline arguments or environment variables, keys may be overlap, for examples
+
+```shell
+-foo.redis=cluster1
+-foo.redis.name=cluster2
+```
+
+```shell
+FOO_REDIS=cluster1
+FOO_REDIS_NAME=cluster2
+```
+
+Get with the key `foo.redis`, there is only one value can be got. This depends on the ordering of arguments loaded. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
+
+If the "-foo.redis=cluster1" is loaded previously, the "-foo.redis.name=cluster2" will be ignored. This will be resulting to:
+
+```go
+Get("foo.redis")         => "cluster1"
+Get("foo.redis.name")    => nil(NOT EXIST)
+```
+
+If the "-foo.redis.name=cluster2" is loaded previously, the "-foo.redis=cluster1" will be ignored. This will be resulting to:
+
+```go
+Get("foo.redis")         => {"name": "cluster2"}
+Get("foo.redis.name")    => "cluster2"
+```
+
+> Should notice that `Get("foo.redis")` will return a subnode, but not nil, in the case 2.
 
 # Tests
 

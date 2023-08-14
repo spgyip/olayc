@@ -6,12 +6,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KV is composition of key and value.
-type KV struct {
-	key   string
-	value any
-}
-
 // flagParser parses from args to kvs.
 type flagParser struct {
 	args []string
@@ -19,32 +13,29 @@ type flagParser struct {
 }
 
 // Parse arguments. Invalid arguments will be ignored.
-// -name=foo | --name=foo            // parsed as <name, foo>
-// -name foo | --name foo            // parsed as <name, foo>
-// -on       | --on                  // parsed as <on, true>
-// -on false | --on false            // parsed as <on, false>
-// -on=false | --on=false            // parsed as <on, false>
+// There are several forms:
+// -key=value | --key=value
+// -key value | --key value
+// -key       | --key         # Same as -key=true, -key true
 //
-// Value interpretation:
-// "true" => true   # Not case sensitive
-// "false" => false # Not case sensitive
-func (f *flagParser) parse(args []string) int {
-	f.args = args
+// Value interpretation should refer to `interpreted(string)`.
+func (psr *flagParser) parse(args []string) int {
+	psr.args = args
 	end := false
 	for !end {
-		end, _ = f.parseOne()
+		end, _ = psr.parseOne()
 	}
-	return len(f.kvs)
+	return len(psr.kvs)
 }
 
 // Return true if encounter end of the last argument.
 // Return error if argument invalid.
-func (f *flagParser) parseOne() (bool, error) {
-	if len(f.args) == 0 {
+func (psr *flagParser) parseOne() (bool, error) {
+	if len(psr.args) == 0 {
 		return true, nil
 	}
-	key := f.args[0]
-	f.args = f.args[1:]
+	key := psr.args[0]
+	psr.args = psr.args[1:]
 
 	var value any
 	var strValue string
@@ -64,13 +55,13 @@ func (f *flagParser) parseOne() (bool, error) {
 	// "-onof -name=foo" => <onoff, true>, <name, foo>
 	pos := strings.IndexByte(key, '=')
 	if pos < 0 {
-		if len(f.args) == 0 || (f.args[0][0] == '-' && !isAllDigit(f.args[0][1:])) {
+		if len(psr.args) == 0 || (psr.args[0][0] == '-' && !isAllDigit(psr.args[0][1:])) {
 			// E.g. '-onoff'
 			strValue = "true"
-		} else if len(f.args) > 0 {
+		} else if len(psr.args) > 0 {
 			// E.g. '-name foo'
-			strValue = f.args[0]
-			f.args = f.args[1:]
+			strValue = psr.args[0]
+			psr.args = psr.args[1:]
 		}
 	} else {
 		// E.g. '-name=foo'
@@ -80,7 +71,7 @@ func (f *flagParser) parseOne() (bool, error) {
 
 	// Interpret string to concrete type value
 	value = interpret(strValue)
-	f.kvs = append(f.kvs, KV{key, value})
+	psr.kvs = append(psr.kvs, KV{key, value})
 
 	return false, nil
 }

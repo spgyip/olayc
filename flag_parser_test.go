@@ -5,32 +5,32 @@ import (
 	"testing"
 )
 
-func TestFlags(t *testing.T) {
-	fp := &flagParser{}
-	fp.parse([]string{
-		"-id1=123",
-		"-id2", "123",
-		"--id3=123",
-		"--id4", "123",
-		"-id5", "-123",
-		"-temp", "123.0",
-		"-on1",         // Bool value, default true
-		"-on2", "true", // Bool value
-		"-on3", "false", // Bool value
+func TestFlagParser(t *testing.T) {
+	psr := &flagParser{}
+	psr.parse([]string{
+		"-foo.id1=123",
+		"-foo.id2", "123",
+		"--foo.id3=123",
+		"--foo.id4", "123",
+		"-foo.id5", "-123",
+		"-foo.temp", "123.0",
+		"-foo.on1",         // Bool value, default true
+		"-foo.on2", "true", // Bool value
+		"-foo.on3", "false", // Bool value
 		"invalid-arg",
 	})
 
-	var got = fp.kvs
+	var got = psr.kvs
 	var expect = []KV{
-		{"id1", uint64(123)},
-		{"id2", uint64(123)},
-		{"id3", uint64(123)},
-		{"id4", uint64(123)},
-		{"id5", int64(-123)},
-		{"temp", float64(123.0)},
-		{"on1", true},
-		{"on2", true},
-		{"on3", false},
+		{"foo.id1", uint64(123)},
+		{"foo.id2", uint64(123)},
+		{"foo.id3", uint64(123)},
+		{"foo.id4", uint64(123)},
+		{"foo.id5", int64(-123)},
+		{"foo.temp", float64(123.0)},
+		{"foo.on1", true},
+		{"foo.on2", true},
+		{"foo.on3", false},
 	}
 
 	if len(expect) != len(got) {
