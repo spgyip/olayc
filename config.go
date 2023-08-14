@@ -313,9 +313,9 @@ func Load(opts ...loadOptionFunc) {
 		of(&opt)
 	}
 
-	fp := &flagParser{}
-	fp.parse(os.Args[1:])
-	for _, kv := range fp.kvs {
+	psr := &flagParser{}
+	psr.parse(os.Args[1:])
+	for _, kv := range psr.kvs {
 		if internalFlags["silent"].is(kv.key) {
 			if kv.value == true {
 				silent = true
