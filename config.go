@@ -273,13 +273,13 @@ func (c *OlayConfig) Unmarshal(key string, out any) error {
 }
 
 // Return Yaml bytes.
-func (c *OlayConfig) ToYaml() (string, error) {
+func (c *OlayConfig) ToYaml() string {
 	v := c.Get(Root)
 	data, err := v.MarshalToYaml()
 	if err != nil {
-		return "", err
+		return ""
 	}
-	return string(data), nil
+	return string(data)
 }
 
 // `defaultC` is the default OlayConfig.
@@ -313,9 +313,9 @@ func Load(opts ...loadOptionFunc) {
 		of(&opt)
 	}
 
-	psr := &flagParser{}
-	psr.parse(os.Args[1:])
-	for _, kv := range psr.kvs {
+	fpsr := &flagParser{}
+	fpsr.parse(os.Args[1:])
+	for _, kv := range fpsr.kvs {
 		if internalFlags["silent"].is(kv.key) {
 			if kv.value == true {
 				silent = true
@@ -349,10 +349,15 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	if len(opt.filesRequired) > 0 && !silent {
-		fmt.Println("[OlayConfig] Files required:")
-		for _, name := range opt.filesRequired {
-			fmt.Printf("  - %v\n", name)
+		fmt.Printf("[OlayConfig] Required files: [")
+		for i, name := range opt.filesRequired {
+			if i == len(opt.filesRequired)-1 {
+				fmt.Printf("%v", name)
+			} else {
+				fmt.Printf("%v, ", name)
+			}
 		}
+		fmt.Printf("]\n")
 	}
 
 	// Check required files
@@ -368,12 +373,12 @@ func Load(opts ...loadOptionFunc) {
 			}
 		}
 		if !ok {
-			fmt.Printf("[OlayConfig][Error] File %v is required.\n", fr)
+			fmt.Printf("[OlayConfig][Error] Required file \"%v\" is not provided.\n", fr)
 			fileCheck = false
 		}
 	}
 	if !fileCheck {
-		fmt.Println("[OlayConfig] Use '-oc.f.(y|j)=....'")
+		fmt.Println("[OlayConfig][Error] Add required files using '-oc.f.(y|j)=....'.")
 		os.Exit(1)
 	}
 
@@ -388,16 +393,17 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	// Load ENVs
-	n, err = defaultC.LoadEnvs(os.Environ())
-	if err != nil {
+	/*
+		n, err = defaultC.LoadEnvs(os.Environ())
 		if err != nil {
-			fmt.Printf("[OlayConfig][Error] Load environments fail, error: %v]\n", err)
-			os.Exit(1)
+			if err != nil {
+				fmt.Printf("[OlayConfig][Error] Load environments fail, error: %v]\n", err)
+				os.Exit(1)
+			}
 		}
-	}
-	if !silent {
-		fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
-	}
+		if !silent {
+			fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
+		}*/
 
 	// Load yaml/json files
 	for _, f := range files {
@@ -419,7 +425,7 @@ func Load(opts ...loadOptionFunc) {
 
 	if dryrun {
 		fmt.Println("[OlayConfig] Dry run mode is on, program will exit after yaml printed.")
-		fmt.Println(defaultC.ToYaml())
+		fmt.Printf("%v", defaultC.ToYaml())
 		os.Exit(0)
 	}
 }
@@ -470,6 +476,6 @@ func Unmarshal(key string, out any) error {
 }
 
 // ToYaml with default OlayConfig.
-func ToYaml() (string, error) {
+func ToYaml() string {
 	return defaultC.ToYaml()
 }
