@@ -208,24 +208,24 @@ FOO_REDIS=cluster1
 FOO_REDIS_NAME=cluster2
 ```
 
-There is only one value can be got when get with key 'foo.redis'. This depends on the order of loading. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
+There is only one value can be got with key 'foo.redis'. This depends on the order of loading. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
 
-If the "-foo.redis=cluster1" is loaded previously, the "-foo.redis.name=cluster2" will be ignored. This is resulting to:
+If `-foo.redis=cluster1` is loaded previously, the `-foo.redis.name=cluster2` will be ignored. This is resulting to:
 
 ```go
 Get("foo.redis")         => "cluster1"
 Get("foo.redis.name")    => nil(NOT EXIST)
 ```
 
-If the "-foo.redis.name=cluster2" is loaded previously, the "-foo.redis=cluster1" will be ignored. This is resulting to:
+If the `-foo.redis.name=cluster2` is loaded previously, the `-foo.redis=cluster1` will be ignored. This is resulting to:
 
 ```go
 Get("foo.redis")         => {"name": "cluster2"}
 Get("foo.redis.name")    => "cluster2"
 ```
 
-> Should notice that `Get("foo.redis")` will return a subnode, but not nil, in the case 2.
+> Should notice that in case 2, `Get("foo.redis")` returns the subnode, not nil(NOT EXIST).
 
 # Tests
 
-Make sure run tests with `make test` if you fork this repo and try to add some features.
+Make sure passing all tests with `make test` if you try to add some features.
