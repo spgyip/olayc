@@ -306,6 +306,7 @@ func Load(opts ...loadOptionFunc) {
 	var help = false
 	var silent = false
 	var dryrun = false
+	var ifEnv = false
 	var files []inputFile
 
 	var opt loadOptions
@@ -322,6 +323,8 @@ func Load(opts ...loadOptionFunc) {
 			} else {
 				silent = false
 			}
+		} else if internalFlags["env"].is(kv.key) {
+			ifEnv = true
 		} else if internalFlags["help"].is(kv.key) {
 			help = true
 		} else if internalFlags["dryrun"].is(kv.key) {
@@ -343,9 +346,13 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	if !silent {
-		fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
+		fmt.Printf("[OlayConfig] Silent mode: %v. (-oc.s)\n", silent)
+		fmt.Printf("[OlayConfig] ENVs load: %v (-oc.e)\n", ifEnv)
+		fmt.Printf("[OlayConfig] Dry run mode: %v. (-oc.dr)\n", dryrun)
+		/*fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
 		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
-		fmt.Printf("[OlayConfig] Dry run mode is %v.\n", dryrun)
+		fmt.Printf("[OlayConfig] ENVs load is %v\n", ifEnv)
+		fmt.Printf("[OlayConfig] Dry run mode is %v.\n", dryrun)*/
 	}
 
 	if len(opt.filesRequired) > 0 && !silent {
@@ -393,7 +400,7 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	// Load ENVs
-	/*
+	if ifEnv {
 		n, err = defaultC.LoadEnvs(os.Environ())
 		if err != nil {
 			if err != nil {
@@ -403,7 +410,8 @@ func Load(opts ...loadOptionFunc) {
 		}
 		if !silent {
 			fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
-		}*/
+		}
+	}
 
 	// Load yaml/json files
 	for _, f := range files {

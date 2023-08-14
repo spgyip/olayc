@@ -38,6 +38,11 @@ var internalFlags = map[string]internalFlag{
 		"oc.f.j",
 		"Load json file.",
 	},
+	"env": internalFlag{
+		"oc.env",
+		"oc.e",
+		"Load from environments.",
+	},
 	"dryrun": internalFlag{
 		"oc.dryrun",
 		"oc.dr",
