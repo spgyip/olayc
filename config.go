@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,25 +22,54 @@ type KV struct {
 	value any
 }
 
-// Print OlayConfig usage.
-func usage() {
-	fmt.Println("Usage of olayc:")
-	for _, fn := range internalFlags {
-		fmt.Printf("  -%v | -%v\n", fn.full, fn.short)
-		fmt.Printf("         %v\n", fn.help)
-	}
-}
+// loadOptionFunc is function handling `*loadOptions`
+type loadOptionFunc func(*loadOptions)
 
 // LoadOptions set options for `Load()`.
-type loadOptionFunc func(*loadOptions)
 type loadOptions struct {
 	filesRequired []string
+	usageEntries  []usageEntry
+}
+
+// usageEntry is an entry for usage message.
+type usageEntry struct {
+	key          string
+	knd          reflect.Kind
+	defaultValue any
+	help         string
 }
 
 // WithFileRequire returns a loadOptionFunc appends a required file.
 func WithFileRequire(name string) loadOptionFunc {
 	return func(opt *loadOptions) {
 		opt.filesRequired = append(opt.filesRequired, name)
+	}
+}
+
+// WithUsage appends a usage message, when there are parsing errors or '-h|--help' arguments, usage message will be printed.
+// If there is no defaultValue, set it to nil.
+func WithUsage(key string, knd reflect.Kind, defaultValue any, help string) loadOptionFunc {
+	return func(opt *loadOptions) {
+		opt.usageEntries = append(opt.usageEntries, usageEntry{key, knd, defaultValue, help})
+	}
+}
+
+// Print application usage message.
+func usageApp(entries []usageEntry) {
+	if len(entries) == 0 {
+		fmt.Println("No usage info.")
+		return
+	}
+	fmt.Println("Usage of app:")
+	fmt.Println("  -h|--help bool")
+	fmt.Println("       Print this help message. ")
+	for _, entry := range entries {
+		fmt.Printf("  -%v %v\n", entry.key, entry.knd)
+		fmt.Printf("       %v", entry.help)
+		if entry.defaultValue != nil {
+			fmt.Printf(" (default %v)", entry.defaultValue)
+		}
+		fmt.Println("")
 	}
 }
 
@@ -303,7 +333,8 @@ func Load(opts ...loadOptionFunc) {
 		typ  inputFileType
 	}
 
-	var help = false
+	var helpOC = false
+	var helpApp = false
 	var silent = false
 	var dryrun = false
 	var ifEnv = false
@@ -317,31 +348,38 @@ func Load(opts ...loadOptionFunc) {
 	fpsr := &flagParser{}
 	fpsr.parse(os.Args[1:])
 	for _, kv := range fpsr.kvs {
+		// Handle internal flags.
 		if internalFlags["silent"].is(kv.key) {
-			if kv.value == true {
-				silent = true
-			} else {
-				silent = false
-			}
+			silent = kv.value.(bool)
 		} else if internalFlags["env"].is(kv.key) {
-			ifEnv = true
+			ifEnv = kv.value.(bool)
 		} else if internalFlags["help"].is(kv.key) {
-			help = true
+			helpOC = kv.value.(bool)
 		} else if internalFlags["dryrun"].is(kv.key) {
-			dryrun = true
+			dryrun = kv.value.(bool)
 		} else if internalFlags["file.yaml"].is(kv.key) {
 			files = append(files, inputFile{kv.value.(string), Yaml})
 		} else if internalFlags["file.json"].is(kv.key) {
 			files = append(files, inputFile{kv.value.(string), Json})
 		} else if strings.HasPrefix(kv.key, internalFlagPrefix) {
 			fmt.Printf("[OlayConfig][Error] Unknown oc flag: %v\n", kv.key)
-			usage()
+			usageOlayc()
 			os.Exit(1)
+		}
+
+		// Special case for user usage.
+		if kv.key == "h" || kv.key == "help" {
+			helpApp = kv.value.(bool)
 		}
 	}
 
-	if help {
-		usage()
+	if helpOC {
+		usageOlayc()
+		os.Exit(0)
+	}
+
+	if helpApp {
+		usageApp(opt.usageEntries)
 		os.Exit(0)
 	}
 
@@ -349,10 +387,6 @@ func Load(opts ...loadOptionFunc) {
 		fmt.Printf("[OlayConfig] Silent mode: %v. (-oc.s)\n", silent)
 		fmt.Printf("[OlayConfig] ENVs load: %v (-oc.e)\n", ifEnv)
 		fmt.Printf("[OlayConfig] Dry run mode: %v. (-oc.dr)\n", dryrun)
-		/*fmt.Println("[OlayConfig] Silent mode is off, verbose messages will be printed.")
-		fmt.Printf("[OlayConfig] Silent mode can be turned on with '-%v'.\n", internalFlags["silent"].short)
-		fmt.Printf("[OlayConfig] ENVs load is %v\n", ifEnv)
-		fmt.Printf("[OlayConfig] Dry run mode is %v.\n", dryrun)*/
 	}
 
 	if len(opt.filesRequired) > 0 && !silent {

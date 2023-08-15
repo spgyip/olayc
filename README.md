@@ -132,11 +132,19 @@ olayc.Load()
 ```
 
 It's very common there are configure files must be loaded before program startup. 
-Use `WithFileRequire()` on `Load()`, program will terminates if the required file is not loaded.
+Use `WithFileRequire()`, program will exits if the required file is not loaded.
 
 ```go
 olayc.Load(
     olayc.WithFileRequire("test1.yaml"),
+)
+```
+
+Add application usage with `WithUsage()`, usage message will be printed out with commandline argument `-h|--help`.
+
+```go
+olayc.Load(
+	olayc.WithUsage("foo.id", reflect.Int, 99, "Set foo ID"),
 )
 ```
 
@@ -174,11 +182,12 @@ The default olayc has default priority when multiple configure sources are loade
 - Environment variables
 - Yaml/Json Files
 
-# Internal olayc flags
+# Help message
 
-There are internal olayc flags which are prefix with '-oc.|--oc.', use `-oc.h` to see help message.
+Use `-oc.h|--oc.help` to see OlayConfig help message.
 
 ```shell
+./bin/simple -oc.h
 Usage of olayc:
   -oc.help | -oc.h
          Print this help message.
@@ -192,6 +201,19 @@ Usage of olayc:
          Load from environments.
   -oc.dryrun | -oc.dr
          Dry run, load and print Yaml then exit.
+```
+
+> Notice that commandline arguments which are prefixed with `-oc.|--oc.` is preserved by OlayConfig.
+
+Use `-h|--help` to see application help message.
+
+```shell
+./bin/simple -h
+Usage of app:
+  -h|--help bool
+       Print this help message.
+  -foo.id int
+       Set foo ID (default 99)
 ```
 
 # Overlap keys
