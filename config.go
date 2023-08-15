@@ -335,7 +335,7 @@ func Load(opts ...loadOptionFunc) {
 
 	var helpOC = false
 	var helpApp = false
-	var silent = false
+	var verbose = false
 	var dryrun = false
 	var ifEnv = false
 	var files []inputFile
@@ -349,8 +349,8 @@ func Load(opts ...loadOptionFunc) {
 	fpsr.parse(os.Args[1:])
 	for _, kv := range fpsr.kvs {
 		// Handle internal flags.
-		if internalFlags["silent"].is(kv.key) {
-			silent = kv.value.(bool)
+		if internalFlags["verbose"].is(kv.key) {
+			verbose = kv.value.(bool)
 		} else if internalFlags["env"].is(kv.key) {
 			ifEnv = kv.value.(bool)
 		} else if internalFlags["help"].is(kv.key) {
@@ -383,13 +383,13 @@ func Load(opts ...loadOptionFunc) {
 		os.Exit(0)
 	}
 
-	if !silent {
-		fmt.Printf("[OlayConfig] Silent mode: %v. (-oc.s)\n", silent)
+	if verbose {
+		fmt.Printf("[OlayConfig] Verbose mode: %v. (-oc.s)\n", verbose)
 		fmt.Printf("[OlayConfig] ENVs load: %v (-oc.e)\n", ifEnv)
 		fmt.Printf("[OlayConfig] Dry run mode: %v. (-oc.dr)\n", dryrun)
 	}
 
-	if len(opt.filesRequired) > 0 && !silent {
+	if len(opt.filesRequired) > 0 && verbose {
 		fmt.Printf("[OlayConfig] Required files: [")
 		for i, name := range opt.filesRequired {
 			if i == len(opt.filesRequired)-1 {
@@ -429,7 +429,7 @@ func Load(opts ...loadOptionFunc) {
 		fmt.Printf("[OlayConfig][Error] Load arguments fail, error: %v]\n", err)
 		os.Exit(1)
 	}
-	if !silent {
+	if verbose {
 		fmt.Printf("[OlayConfig] Commandlines loaded, totally %v KVs.\n", n)
 	}
 
@@ -442,7 +442,7 @@ func Load(opts ...loadOptionFunc) {
 				os.Exit(1)
 			}
 		}
-		if !silent {
+		if !verbose {
 			fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
 		}
 	}
@@ -460,7 +460,7 @@ func Load(opts ...loadOptionFunc) {
 			fmt.Printf("[OlayConfig][Error] Load fail, error: %v\n", err)
 			os.Exit(1)
 		}
-		if !silent {
+		if verbose {
 			fmt.Printf("[OlayConfig] File loaded: %v.\n", f.name)
 		}
 	}
