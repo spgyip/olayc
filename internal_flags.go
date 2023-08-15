@@ -53,7 +53,7 @@ var internalFlags = map[string]internalFlag{
 		"oc.env",
 		"oc.e",
 		reflect.Bool,
-		"Load from environments.",
+		"Load environment variables.",
 	},
 	"dryrun": internalFlag{
 		"oc.dryrun",
