@@ -80,12 +80,12 @@ FOO_NAME=foo-env ./bin/simple -oc.e \
                               -foo.redis.port=999
 ```
 
-## Silent mode
+## Verbose mode
 
-There are default verbose logs, silent mode can be turned on with `-oc.s`:
+Turn verbose mode with `-oc.v`, more debug messages are printed out.
 
 ```shell
-./bin/simple -oc.s \
+./bin/simple -oc.v \
              -oc.e \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
@@ -191,8 +191,8 @@ Use `-oc.h|--oc.help` to see OlayConfig help message.
 Usage of olayc:
   -oc.help | -oc.h
          Print this help message.
-  -oc.silent | -oc.s
-         Set silent mode, default is false.
+  -oc.verbose|-oc.v bool
+         Set verbose mode, more messages are printed.
   -oc.file.yaml | -oc.f.y
          Load yaml file.
   -oc.file.json | -oc.f.j

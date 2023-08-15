@@ -31,11 +31,11 @@ var internalFlags = map[string]internalFlag{
 		reflect.Bool,
 		"Print this help message.",
 	},
-	"silent": internalFlag{
-		"oc.silent",
-		"oc.s",
+	"verbose": internalFlag{
+		"oc.verbose",
+		"oc.v",
 		reflect.Bool,
-		"Set silent mode, default is false.",
+		"Set verbose mode, more messages are printed.",
 	},
 	"file.yaml": internalFlag{
 		"oc.file.yaml",
