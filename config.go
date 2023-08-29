@@ -384,9 +384,9 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	if verbose {
-		fmt.Printf("[OlayConfig] Verbose: %v. (-oc.s)\n", verbose)
-		fmt.Printf("[OlayConfig] Load ENVs: %v. (-oc.e)\n", ifEnv)
-		fmt.Printf("[OlayConfig] Dry run: %v. (-oc.dr)\n", dryrun)
+		fmt.Printf("[OlayConfig] Verbose: %v. (use -oc.v)\n", verbose)
+		fmt.Printf("[OlayConfig] Load ENVs: %v. (use -oc.e)\n", ifEnv)
+		fmt.Printf("[OlayConfig] Dry run: %v. (use -oc.dr)\n", dryrun)
 	}
 
 	if len(opt.filesRequired) > 0 && verbose {
