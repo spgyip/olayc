@@ -402,23 +402,18 @@ func Load(opts ...loadOptionFunc) {
 	}
 
 	// Check required files
-	var fileCheck = true
+	checkPass := true
 	for _, fr := range opt.filesRequired {
-		var ok = false
-		for _, fy := range files {
-			// Check if fy has suffix of fr.
-			n := len(fy.name) - len(fr)
-			if n >= 0 && fy.name[n:] == fr {
-				ok = true
-				break
-			}
+		ok := false
+		for i := 0; i < len(files) && !ok; i++ {
+			ok = strings.HasSuffix(files[i].name, fr)
 		}
 		if !ok {
 			fmt.Printf("[OlayConfig][Error] Required file \"%v\" is not provided.\n", fr)
-			fileCheck = false
+			checkPass = false
 		}
 	}
-	if !fileCheck {
+	if !checkPass {
 		fmt.Println("[OlayConfig][Error] Add required files using '-oc.f.(y|j)=....'.")
 		os.Exit(1)
 	}
@@ -437,10 +432,8 @@ func Load(opts ...loadOptionFunc) {
 	if ifEnv {
 		n, err = defaultC.LoadEnvs(os.Environ())
 		if err != nil {
-			if err != nil {
-				fmt.Printf("[OlayConfig][Error] Load environments fail, error: %v]\n", err)
-				os.Exit(1)
-			}
+			fmt.Printf("[OlayConfig][Error] Load environments fail, error: %v]\n", err)
+			os.Exit(1)
 		}
 		if verbose {
 			fmt.Printf("[OlayConfig] Environments loaded, totally %v KVs.\n", n)
@@ -452,7 +445,6 @@ func Load(opts ...loadOptionFunc) {
 		var err error
 		if f.typ == Yaml {
 			err = defaultC.LoadYamlFile(f.name)
-
 		} else if f.typ == Json {
 			err = defaultC.LoadJsonFile(f.name)
 		}
