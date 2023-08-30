@@ -1,20 +1,23 @@
 Overlay configuration
 ===================================
 
-Configurations are very common scenerios controlling program behaviors at runtime. There are different ways of configuration, e.g. from configure files, commandline arguments, environment variables. Overlay configuration is composition of multiple configure sources, and provides a unified interface to load from different configure sources. 
+Configurations are very common scenerios controlling program behaviors at runtime. There are different ways of configuration, e.g. from configure files, commandline arguments, environment variables. Overlay configuration is composition of multiple configure sources, and provides an unified interface to load from different configure sources. 
 
 ```
                                 [### Configure sources ###]
 
-                                -------------------------
-                       --------- | commandline arguments |
+                                 -------------------------
+                       |<------  | commandline arguments |
                        |         -------------------------
     ---------------    |         --------------
-    |    olayc    | <----------- | Yaml files |
+    |    olayc    | <--|<------- | Yaml files |
     ---------------    |         --------------
                        |         --------------
-                       --------- |    ENVs    |
-                                 --------------
+                       |<------- |    ENVs    |
+                       |         --------------
+                       |         ---------------
+                       |<------- |   ...       |
+                                 ---------------
 ```
 
 Currently supported: 
@@ -22,11 +25,11 @@ Currently supported:
 - [X] Yaml file
 - [X] Json file
 - [X] Environments
-- [ ] Etcd KV
+- [ ] Etcd KVs
 
 # Overlay
 
-Every configure sources are overlayed from bottom to top, the upper layer has more priority than the lower ones, which means if there are keys conflited the value in the upper layer will be got.
+Every configure sources are overlayed from bottom to top, the upper layer has more priority than the lower ones, which means if there are keys conflited the value in the upper layer will win.
 
 ![layers](readme/images/layers.png)
 
@@ -41,9 +44,15 @@ Use `-of.f.y=...` to add yaml file.
 ```shell
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
+
+foo.id: 123
+foo.name: foo1
+foo.url: http://www.example.com
+foo.redis.host: localhost
+foo.redis.port: 0
 ```
 
-> The left yaml file is prior to right file, thus, if there are same keys in `test1.yaml` and `test2.yaml`, the value in `test1.yaml` will be got.
+> The left yaml file is prior to right file, thus, if there are same keys in `test1.yaml` and `test2.yaml`, the value in `test1.yaml` will win.
 
 ## Load json files
 
@@ -53,6 +62,12 @@ Use `-of.f.j=...` to add json file.
 ./bin/simple -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml
              -oc.f.j=./testdata/test1.json
+
+foo.id: 123
+foo.name: foo1
+foo.url: http://www.example.com
+foo.redis.host: redis.cluster
+foo.redis.port: 8306
 ```
 
 ## Load from commandline arguments
@@ -65,6 +80,12 @@ Use commandline argument seperated by `.`.
              -oc.f.j=./testdata/test1.json
              -foo.redis.host=redis.othercluster \
              -foo.redis.port=999
+
+foo.id: 123
+foo.name: foo1
+foo.url: http://www.example.com
+foo.redis.host: redis.othercluster
+foo.redis.port: 999
 ```
 
 ## Load from environment variables
@@ -78,6 +99,12 @@ FOO_NAME=foo-env ./bin/simple -oc.e \
                               -oc.f.j=./testdata/test1.json
                               -foo.redis.host=redis.othercluster \
                               -foo.redis.port=999
+
+foo.id: 123
+foo.name: foo-env
+foo.url: http://www.example.com
+foo.redis.host: redis.othercluster
+foo.redis.port: 999
 ```
 
 ## Verbose mode
@@ -86,12 +113,25 @@ Turn verbose mode with `-oc.v`, more debug messages are printed out.
 
 ```shell
 ./bin/simple -oc.v \
-             -oc.e \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
              -oc.f.j=./testdata/test1.json \
              -foo.redis.host=redis.othercluster \
              -foo.redis.port=999
+
+[OlayConfig] Verbose: true. (use -oc.v)
+[OlayConfig] Load ENVs: false. (use -oc.e)
+[OlayConfig] Dry run: false. (use -oc.dr)
+[OlayConfig] Required files: [test1.yaml, test2.yaml]
+[OlayConfig] Commandlines loaded, totally 2 KVs.
+[OlayConfig] File loaded: ./testdata/test1.yaml.
+[OlayConfig] File loaded: ./testdata/test2.yaml.
+[OlayConfig] File loaded: ./testdata/test1.json.
+foo.id: 123
+foo.name: foo1
+foo.url: http://www.example.com
+foo.redis.host: redis.othercluster
+foo.redis.port: 999
 ```
 
 ## Dry run mode
@@ -100,8 +140,6 @@ Use `-oc.dr` to turn on dry run mode, olayc loads and prints out the merged conf
 
 ```shell
 ./bin/simple -oc.dr \
-             -oc.s \
-             -oc.e \
              -oc.f.y=./testdata/test1.yaml \
              -oc.f.y=./testdata/test2.yaml \
              -oc.f.j=./testdata/test1.json \
@@ -120,6 +158,29 @@ foo:
     port: 999
   url: http://www.example.com
 ```
+
+## Print olayc help message
+
+Use `-oc.h|--oc.help` to see OlayConfig help message.
+
+```shell
+./bin/simple -oc.h
+Usage of olayc:
+  -oc.help | -oc.h
+         Print this help message.
+  -oc.verbose|-oc.v bool
+         Set verbose mode, more messages are printed.
+  -oc.file.yaml | -oc.f.y
+         Load yaml file.
+  -oc.file.json | -oc.f.j
+         Load json file.
+  -oc.env | -oc.e
+         Load from environments.
+  -oc.dryrun | -oc.dr
+         Dry run, load and print Yaml then exit.
+```
+
+> Notice that commandline arguments prefixed with `-oc.|--oc.` are preserved by OlayConfig internal.
 
 # Usage
 
@@ -146,6 +207,15 @@ Add application usage with `WithUsage()`, usage message will be printed out with
 olayc.Load(
 	olayc.WithUsage("foo.id", reflect.Int, 99, "Set foo ID"),
 )
+```
+
+```shell
+./bin/simple -h
+Usage of app:
+  -h|--help bool
+       Print this help message.
+  -foo.id int
+       Set foo ID (default 99)
 ```
 
 ## Get scalar value
@@ -176,49 +246,15 @@ olayc.Unmarshal(olayc.Root, &cfg)
 
 # Priority
 
-The default olayc has default priority when multiple configure sources are loaded, which are:
+The default olayc has default priority when multiple configure sources are loaded, which are as ordered:
 
 - Commandline arguments
 - Environment variables
 - Yaml/Json Files
 
-# Help message
+# Key overlapped
 
-Use `-oc.h|--oc.help` to see OlayConfig help message.
-
-```shell
-./bin/simple -oc.h
-Usage of olayc:
-  -oc.help | -oc.h
-         Print this help message.
-  -oc.verbose|-oc.v bool
-         Set verbose mode, more messages are printed.
-  -oc.file.yaml | -oc.f.y
-         Load yaml file.
-  -oc.file.json | -oc.f.j
-         Load json file.
-  -oc.env | -oc.e
-         Load from environments.
-  -oc.dryrun | -oc.dr
-         Dry run, load and print Yaml then exit.
-```
-
-> Notice that commandline arguments which are prefixed with `-oc.|--oc.` is preserved by OlayConfig.
-
-Use `-h|--help` to see application help message.
-
-```shell
-./bin/simple -h
-Usage of app:
-  -h|--help bool
-       Print this help message.
-  -foo.id int
-       Set foo ID (default 99)
-```
-
-# Overlap keys
-
-When use commandline arguments or environment variables, keys may be overlap, for examples
+When use commandline arguments or environment variables, keys may be overlapped, for examples
 
 ```shell
 -foo.redis=cluster1
@@ -230,7 +266,7 @@ FOO_REDIS=cluster1
 FOO_REDIS_NAME=cluster2
 ```
 
-There is only one value can be got with key 'foo.redis'. This depends on the order of loading. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
+There is only one value can be got with key 'foo.redis'. It depends on the ordering of load. The previously loaded key is prior to the latter ones, the latter ones will be ignored.
 
 If `-foo.redis=cluster1` is loaded previously, the `-foo.redis.name=cluster2` will be ignored. This is resulting to:
 
