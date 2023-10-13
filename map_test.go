@@ -6,8 +6,8 @@ import (
 )
 
 func TestMergeMapAppendEmpty(t *testing.T) {
-	var m0 = map[any]any{}
-	var m1 = map[any]any{
+	var dst = map[any]any{}
+	var src = map[any]any{
 		"foo": map[any]any{
 			"id": 123,
 		},
@@ -19,21 +19,21 @@ func TestMergeMapAppendEmpty(t *testing.T) {
 		},
 	}
 
-	copyMap(m0, m1)
-	if !reflect.DeepEqual(m0, expect) {
-		t.Log("m0:", m0)
+	copyMap(dst, src)
+	if !reflect.DeepEqual(dst, expect) {
+		t.Log("m0:", dst)
 		t.Log("expect:", expect)
 		t.Fatal("Merged result is not expected.")
 	}
 }
 
 func TestMergeMapAppendNew(t *testing.T) {
-	var m0 = map[any]any{
+	var dst = map[any]any{
 		"foo": map[any]any{
 			"id": 123,
 		},
 	}
-	var m1 = map[any]any{
+	var src = map[any]any{
 		"foo": map[any]any{
 			"name": "foo1",
 		},
@@ -46,21 +46,21 @@ func TestMergeMapAppendNew(t *testing.T) {
 		},
 	}
 
-	copyMap(m0, m1)
-	if !reflect.DeepEqual(m0, expect) {
-		t.Log("m0:", m0)
+	copyMap(dst, src)
+	if !reflect.DeepEqual(dst, expect) {
+		t.Log("m0:", dst)
 		t.Log("expect:", expect)
 		t.Fatal("Merged result is not expected.")
 	}
 }
 
 func TestMergeMapIgnoreNode(t *testing.T) {
-	var m0 = map[any]any{
+	var dst = map[any]any{
 		"foo": map[any]any{
 			"id": 123,
 		},
 	}
-	var m1 = map[any]any{
+	var src = map[any]any{
 		"foo": map[any]any{
 			"id":   456,
 			"name": "foo1",
@@ -74,16 +74,16 @@ func TestMergeMapIgnoreNode(t *testing.T) {
 		},
 	}
 
-	copyMap(m0, m1)
-	if !reflect.DeepEqual(m0, expect) {
-		t.Log("m0:", m0)
+	copyMap(dst, src)
+	if !reflect.DeepEqual(dst, expect) {
+		t.Log("m0:", dst)
 		t.Log("expect:", expect)
 		t.Fatal("Merged result is not expected.")
 	}
 }
 
 func TestMergeMapIgnoreSubTree(t *testing.T) {
-	var m0 = map[any]any{
+	var dst = map[any]any{
 		"foo": map[any]any{
 			"id": 123,
 			"redis": map[any]any{
@@ -92,7 +92,7 @@ func TestMergeMapIgnoreSubTree(t *testing.T) {
 			},
 		},
 	}
-	var m1 = map[any]any{
+	var src = map[any]any{
 		"foo": map[any]any{
 			"name":  "foo1",
 			"redis": "redis.cluster",
@@ -110,9 +110,9 @@ func TestMergeMapIgnoreSubTree(t *testing.T) {
 		},
 	}
 
-	copyMap(m0, m1)
-	if !reflect.DeepEqual(m0, expect) {
-		t.Log("m0:", m0)
+	copyMap(dst, src)
+	if !reflect.DeepEqual(dst, expect) {
+		t.Log("m0:", dst)
 		t.Log("expect:", expect)
 		t.Fatal("Merged result is not expected.")
 	}

@@ -9,15 +9,14 @@ import (
 
 // Copy map values from src to dst, keep the src value if key is conflicted.
 //
-// There are some cases(see map_test.go), for a specified key:
 // - If it doesn't exist in dst map, copy src map value to dst map.
-// For example, dst's `foo.name=foo0` will be copied to result.
-// src:
+// For example, src's `foo.name=foo0` will be copied to result.
+// dst:
 // `
 // foo:
 //   id: 123
 // `
-// dst:
+// src:
 // `
 // foo:
 //   name: foo0
@@ -29,14 +28,14 @@ import (
 //   name: foo0
 // `
 //
-// - If it's a leaf node in dst map, the src map value will be ignored.
-// For example, dst's `foo.id=456` will be ignored, the result is using src's `foo.id=123`
-// src:
+// - If it's a leaf node in dst map, the src map value will be ignored, even if the src map value is a subtree.
+// For example, src's `foo.id=456` will be ignored, the result is using dst's `foo.id=123`
+// dst:
 // `
 // foo:
 //   id: 123
 // `
-// dst:
+// src:
 // `
 // foo:
 //   id: 456
@@ -50,8 +49,8 @@ import (
 // `
 //
 // - If it's not a leaf node in dst map, but it's leaf node in src map, the src map value will be ignored.
-// For example, the dst's `foo.redis="redis.cluster"` will be ignored, because the src map has a key path `foo.redis.*`.
-// src:
+// For example, the src's `foo.redis="redis.cluster"` will be ignored, because the dst map has a key path `foo.redis.{}`.
+// dst:
 // `
 // foo:
 //   id: 123
@@ -59,7 +58,7 @@ import (
 //     host: redis.cluster
 //     port: 6380
 // `
-// dst:
+// src:
 // `
 // foo:
 //   name: foo0
